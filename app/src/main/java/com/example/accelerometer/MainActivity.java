@@ -26,6 +26,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
+        // Get a reference to the TextView that will show the acceleration values
+        accelerationTextView = findViewById(R.id.accelerationTextView);
+
         // Create an instance of the database helper
         dbHelper = new AccelerationDataDbHelper(this);
 
@@ -52,6 +55,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             float y = event.values[1];
             float z = event.values[2];
             float acceleration = (float) Math.sqrt(x * x + y * y + z * z);
+
+            // Update the TextView with the new acceleration value
+            TextView accelerationTextView = findViewById(R.id.accelerationTextView);
+            accelerationTextView.setText("Acceleration: " + acceleration + " m/s²");
 
             long timestamp = System.currentTimeMillis();
 
