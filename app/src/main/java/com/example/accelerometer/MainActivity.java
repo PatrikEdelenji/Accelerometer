@@ -1,54 +1,56 @@
 package com.example.accelerometer;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
+
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private static final String TAG = "MainActivity";
-
     private SensorManager sensorManager;
-    Sensor accelerometer;
-
-    TextView xValue, yValue, zValue;
-
+    private Sensor accelerometer;
+    private TextView accelerationTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        xValue = (TextView) findViewById(R.id.xValue);
-        yValue = (TextView) findViewById(R.id.yValue);
-        zValue = (TextView) findViewById(R.id.zValue);
-
-        Log.d(TAG, "onCreate: Initializing Sensor Services");
-        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-
+        // Initialize sensor manager and accelerometer sensor
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorManager.registerListener(MainActivity.this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL); //reading sensor without delay
-        Log.d(TAG, "onCreate: Registered accelerometer listener");
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
 
     }
 
     @Override
-    public void onSensorChanged(SensorEvent sensorEvent) {
-        Log.d(TAG, "onSensorChanged: X: " + sensorEvent.values[0] + "Y: " + sensorEvent.values[1] + "Z: " + sensorEvent.values[2]);
+    protected void onResume() {
+        super.onResume();
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+    }
 
-        xValue.setText("xValue: " + sensorEvent.values[0]);
-        yValue.setText("yValue: " + sensorEvent.values[1]);
-        zValue.setText("zValue: " + sensorEvent.values[2]);
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sensorManager.unregisterListener(this);
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            // Calculate acceleration
+            float x = event.values[0];
+            float y = event.values[1];
+            float z = event.values[2];
+            float acceleration = (float) Math.sqrt(x * x + y * y + z * z);
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // Not required in this example
     }
 }
