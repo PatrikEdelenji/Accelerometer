@@ -6,6 +6,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 
@@ -14,6 +15,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private TextView accelerationTextView;
+    private AccelerationDataDbHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,6 +25,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // Initialize sensor manager and accelerometer sensor
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
+        // Create an instance of the database helper
+        dbHelper = new AccelerationDataDbHelper(this);
+
 
     }
 
@@ -46,6 +52,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             float y = event.values[1];
             float z = event.values[2];
             float acceleration = (float) Math.sqrt(x * x + y * y + z * z);
+
+            long timestamp = System.currentTimeMillis();
+
+            // Add acceleration data to the database
+            dbHelper.addAccelerationData(acceleration, timestamp);
         }
     }
 
