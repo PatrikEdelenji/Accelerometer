@@ -6,6 +6,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.widget.TextView;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -50,11 +51,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+
+            Log.d("Sensor Data", "X: " + event.values[0] + " Y: " + event.values[1] + " Z: " + event.values[2]);
+
             // Calculate acceleration
             float x = event.values[0];
             float y = event.values[1];
             float z = event.values[2];
-            float acceleration = (float) Math.sqrt(x * x + y * y + z * z);
+            float acceleration = Math.abs(x + y + z);
+
+
 
             // Update the TextView with the new acceleration value
             TextView accelerationTextView = findViewById(R.id.accelerationTextView);
