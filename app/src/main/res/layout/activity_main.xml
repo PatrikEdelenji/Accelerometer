@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/accelerationTextView"
-        android:layout_width="wrap_content"
+    <com.example.accelerometer.GaugeView
+        android:id="@+id/GaugeView"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Acceleration: "
-        android:textSize="24sp" />
+        android:layout_centerInParent="true"
+        app:agv_max_value="20"
+        app:agv_min_value="0"
+        app:agv_needle_color="#FF0000"
+        app:agv_scale_color="#000000"
+        app:agv_scale_divisions="20"
+        app:agv_scale_end_angle="330"
+        app:agv_scale_radius="120dp"
+        app:agv_scale_start_angle="210"
+        app:agv_value="0" />
 
-</LinearLayout>
+</RelativeLayout>

@@ -1,3 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <declare-styleable name="GaugeView">
+        <attr name="agv_max_value" format="float" />
+        <attr name="agv_min_value" format="float" />
+        <attr name="agv_scale_color" format="color" />
+        <attr name="agv_scale_divisions" format="integer" />
+        <attr name="agv_scale_radius" format="dimension" />
+        <attr name="agv_scale_start_angle" format="float" />
+        <attr name="agv_scale_end_angle" format="float" />
+        <attr name="agv_needle_color" format="color" />
+        <attr name="agv_value" format="float" />
+    </declare-styleable>
 </resources>

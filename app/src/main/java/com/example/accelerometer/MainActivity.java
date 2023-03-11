@@ -5,8 +5,10 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
 import android.util.Log;
+
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -17,6 +19,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Sensor accelerometer;
     private TextView accelerationTextView;
     private AccelerationDataDbHelper dbHelper;
+    private GaugeView GaugeView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,7 +31,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
         // Get a reference to the TextView that will show the acceleration values
-        accelerationTextView = findViewById(R.id.accelerationTextView);
+        GaugeView = findViewById(R.id.GaugeView);
 
         // Create an instance of the database helper
         dbHelper = new AccelerationDataDbHelper(this);
@@ -62,9 +65,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
 
-            // Update the TextView with the new acceleration value
+            GaugeView.setAccelerationValue(acceleration);
+
+            /* Update the TextView with the new acceleration value
             TextView accelerationTextView = findViewById(R.id.accelerationTextView);
             accelerationTextView.setText("Acceleration: " + acceleration + " m/s²");
+            */
+
+
 
             long timestamp = System.currentTimeMillis();
 
