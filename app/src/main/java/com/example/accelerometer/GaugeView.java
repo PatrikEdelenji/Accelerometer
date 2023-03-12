@@ -18,10 +18,10 @@ public class GaugeView extends View {
     private float centerX;
     private float centerY;
     private float radius;
-    private float maxValue = 10f;
-    private float minValue = -10f;
-    private float startAngle = 90f;
-    private float endAngle = 270f;
+    private float maxValue = 20f;
+    private float minValue = 0f;
+    private float startAngle = 180f;
+    private float endAngle = 360f;
     private float numDivisions = 10;
 
     public GaugeView(Context context, AttributeSet attrs) {
@@ -38,7 +38,7 @@ public class GaugeView extends View {
 
         backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         backgroundPaint.setStyle(Paint.Style.STROKE);
-        backgroundPaint.setStrokeWidth(40f);
+        backgroundPaint.setStrokeWidth(0f);
         backgroundPaint.setColor(Color.GRAY);
     }
 
@@ -52,15 +52,15 @@ public class GaugeView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
 
         // Calculate the dimensions of the gauge
-        centerX = getWidth() / 2f;
-        centerY = getHeight() / 2f;
-        radius = Math.min(centerX, centerY) - 40f;
+        centerX = getWidth() / 3f;
+        centerY = getHeight() / 3f;
+        radius = Math.min(centerX, centerY) - 60f;
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         // Draw the background
-        canvas.drawCircle(centerX, centerY, radius, backgroundPaint);
+        //canvas.drawCircle(centerX, centerY, radius, backgroundPaint);
 
         // Draw the scale
         Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -96,7 +96,10 @@ public class GaugeView extends View {
         canvas.drawPath(needlePath, needlePaint);
         canvas.restore();
 
+        // Draw the background
+        //canvas.drawArc(centerX - radius, centerY - radius, centerX + radius, centerY + radius, 180f, 180f, false, backgroundPaint);
+
         // Draw the gauge outline
-        canvas.drawCircle(centerX, centerY, radius, gaugePaint);
+        canvas.drawArc(centerX - radius, centerY - radius, centerX + radius, centerY + radius, 180f, 180f, false, gaugePaint);
     }
 }
