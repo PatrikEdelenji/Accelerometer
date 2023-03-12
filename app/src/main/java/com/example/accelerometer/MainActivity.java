@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             float x = event.values[0];
             float y = event.values[1];
             float z = event.values[2];
-            float acceleration = Math.abs(x + y + z);
+            float acceleration = Math.abs(x + y + z - 9.81f);
 
 
 

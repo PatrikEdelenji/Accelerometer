@@ -1,6 +1,7 @@
 package com.example.accelerometer;
 
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -20,8 +21,8 @@ public class GaugeView extends View {
     private float radius;
     private float maxValue = 20f;
     private float minValue = 0f;
-    private float startAngle = 180f;
-    private float endAngle = 360f;
+    private float startAngle = -90f;
+    private float endAngle = 90f;
     private float numDivisions = 10;
 
     public GaugeView(Context context, AttributeSet attrs) {
@@ -42,9 +43,18 @@ public class GaugeView extends View {
         backgroundPaint.setColor(Color.GRAY);
     }
 
+    //Smoothens out the needle animation
     public void setAccelerationValue(float acceleration) {
-        accelerationValue = acceleration;
-        invalidate();
+        ValueAnimator animator = ValueAnimator.ofFloat(accelerationValue, acceleration);
+        animator.setDuration(500);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                accelerationValue = (float) animation.getAnimatedValue();
+                invalidate();
+            }
+        });
+        animator.start();
     }
 
     @Override
@@ -54,13 +64,13 @@ public class GaugeView extends View {
         // Calculate the dimensions of the gauge
         centerX = getWidth() / 3f;
         centerY = getHeight() / 3f;
-        radius = Math.min(centerX, centerY) - 60f;
+        radius = Math.min(centerX, centerY) - 10f;
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         // Draw the background
-        //canvas.drawCircle(centerX, centerY, radius, backgroundPaint);
+        canvas.drawCircle(centerX, centerY, radius, backgroundPaint);
 
         // Draw the scale
         Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -71,15 +81,35 @@ public class GaugeView extends View {
         float scaleValue = minValue;
         float scaleAngle = (endAngle - startAngle) / numDivisions;
         for (int i = 0; i <= numDivisions; i++) {
-            float scaleAngleRad = (float) Math.toRadians(startAngle + i * scaleAngle);
-            float x = centerX + (radius - 60f) * (float) Math.cos(scaleAngleRad);
-            float y = centerY + (radius - 60f) * (float) Math.sin(scaleAngleRad);
-            canvas.drawText(String.format(Locale.getDefault(), "%.1f", scaleValue), x, y + textHeight / 2f, textPaint);
+            // Calculate the angle for this label
+            float labelAngle = (i / numDivisions) * (endAngle - startAngle) + startAngle;
+
+            // Convert the angle to radians
+            float labelAngleRad = (float) Math.toRadians(labelAngle);
+
+            // Calculate the position of the label
+            float x = centerX + (radius - 60f) * (float) Math.sin(labelAngleRad);
+            float y = centerY - (radius - 60f) * (float) Math.cos(labelAngleRad);
+
+            // Calculate the width of the text
+            String label = String.format(Locale.getDefault(), "%.1f", scaleValue);
+            float labelWidth = textPaint.measureText(label);
+
+            // Draw the label from left to right
+            canvas.drawText(label, x - labelWidth / 2f, y + textHeight / 2f - textPaint.descent(), textPaint);
+
             scaleValue += scaleStep;
         }
 
         // Calculate the angle of the needle based on the acceleration value
         float angle = Math.max(startAngle, Math.min(endAngle, (endAngle - startAngle) * (accelerationValue - minValue) / (maxValue - minValue) + startAngle));
+
+        // Limit the angle of the needle to be within the gauge arc
+        //float gaugeArc = endAngle - startAngle;
+        //float halfGaugeArc = gaugeArc / 2f;
+        float lowerLimit = startAngle;
+        float upperLimit = endAngle;
+        angle = Math.max(lowerLimit, Math.min(upperLimit, angle));
 
         // Draw the gauge needle
         Paint needlePaint = new Paint();
@@ -95,9 +125,6 @@ public class GaugeView extends View {
         canvas.rotate(angle, centerX, centerY);
         canvas.drawPath(needlePath, needlePaint);
         canvas.restore();
-
-        // Draw the background
-        //canvas.drawArc(centerX - radius, centerY - radius, centerX + radius, centerY + radius, 180f, 180f, false, backgroundPaint);
 
         // Draw the gauge outline
         canvas.drawArc(centerX - radius, centerY - radius, centerX + radius, centerY + radius, 180f, 180f, false, gaugePaint);
