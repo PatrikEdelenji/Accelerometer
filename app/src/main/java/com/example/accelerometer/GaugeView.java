@@ -63,14 +63,20 @@ public class GaugeView extends View {
 
         // Calculate the dimensions of the gauge
         centerX = getWidth() / 3f;
-        centerY = getHeight() / 3f;
+        centerY = getHeight() / 2f;
         radius = Math.min(centerX, centerY) - 10f;
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
+
+        // Changes the position of the gauge
+        float centerX = canvas.getWidth() / 2f;
+        float centerY = canvas.getHeight() / 4f;
+
+
         // Draw the background
-        canvas.drawCircle(centerX, centerY, radius, backgroundPaint);
+        //canvas.drawCircle(centerX, centerY, radius, backgroundPaint);
 
         // Draw the scale
         Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
