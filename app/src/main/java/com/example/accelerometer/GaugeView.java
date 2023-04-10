@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.view.View;
 import java.util.Locale;
@@ -24,6 +25,7 @@ public class GaugeView extends View {
     private float startAngle = -90f;
     private float endAngle = 90f;
     private float numDivisions = 10;
+    private float accelerationValueTextPadding = 10f;
 
     public GaugeView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -73,10 +75,6 @@ public class GaugeView extends View {
         // Changes the position of the gauge
         float centerX = canvas.getWidth() / 2f;
         float centerY = canvas.getHeight() / 4f;
-
-
-        // Draw the background
-        //canvas.drawCircle(centerX, centerY, radius, backgroundPaint);
 
         // Draw the scale
         Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -134,5 +132,18 @@ public class GaugeView extends View {
 
         // Draw the gauge outline
         canvas.drawArc(centerX - radius, centerY - radius, centerX + radius, centerY + radius, 180f, 180f, false, gaugePaint);
+
+        // Draw the acceleration value text
+        String accelerationValueText = "Acceleration: " + accelerationValue + " m/s^2";
+        Paint accelerationValueTextPaint = new Paint();
+        accelerationValueTextPaint.setColor(Color.BLACK);
+        accelerationValueTextPaint.setTextSize(24f);
+        accelerationValueTextPaint.setTextAlign(Paint.Align.CENTER);
+        accelerationValueTextPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        float accelerationValueTextWidth = accelerationValueTextPaint.measureText(accelerationValueText);
+        float accelerationValueTextX = centerX;
+        float accelerationValueTextY = centerY + radius + accelerationValueTextPadding + textHeight;
+        canvas.drawText(accelerationValueText, accelerationValueTextX, accelerationValueTextY, accelerationValueTextPaint);
+
     }
 }
