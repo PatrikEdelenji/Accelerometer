@@ -70,8 +70,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             accelerationTextView.setText("Acceleration: " + acceleration + " m/s²");
             */
 
-
-
             long timestamp = System.currentTimeMillis();
 
             // Add acceleration data to the database

@@ -10,17 +10,21 @@ import android.graphics.Path;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.view.View;
+
+import androidx.core.graphics.ColorUtils;
+
 import java.util.Locale;
 
 public class GaugeView extends View {
 
     private float accelerationValue = 0f;
     private Paint gaugePaint;
+    private Paint needlePaint;
     private Paint backgroundPaint;
     private float centerX;
     private float centerY;
     private float radius;
-    private float maxValue = 20f;
+    private float maxValue = 10f;
     private float minValue = 0f;
     private float startAngle = -90f;
     private float endAngle = 90f;
@@ -37,7 +41,12 @@ public class GaugeView extends View {
         gaugePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         gaugePaint.setStyle(Paint.Style.STROKE);
         gaugePaint.setStrokeWidth(40f);
-        gaugePaint.setColor(Color.RED);
+        //gaugePaint.setColor(Color.RED);
+
+        needlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        needlePaint.setStyle(Paint.Style.FILL);
+        //needlePaint.setStrokeWidth(2.0f);
+
 
         backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         backgroundPaint.setStyle(Paint.Style.STROKE);
@@ -92,8 +101,9 @@ public class GaugeView extends View {
             float labelAngleRad = (float) Math.toRadians(labelAngle);
 
             // Calculate the position of the label
-            float x = centerX + (radius - 60f) * (float) Math.sin(labelAngleRad);
-            float y = centerY - (radius - 60f) * (float) Math.cos(labelAngleRad);
+            // CHanging + and - decides whether the numbers will be inside or outside of the gauge
+            float x = centerX + (radius + 60f) * (float) Math.sin(labelAngleRad);
+            float y = centerY - (radius + 60f) * (float) Math.cos(labelAngleRad);
 
             // Calculate the width of the text
             String label = String.format(Locale.getDefault(), "%.1f", scaleValue);
@@ -108,16 +118,17 @@ public class GaugeView extends View {
         // Calculate the angle of the needle based on the acceleration value
         float angle = Math.max(startAngle, Math.min(endAngle, (endAngle - startAngle) * (accelerationValue - minValue) / (maxValue - minValue) + startAngle));
 
-        // Limit the angle of the needle to be within the gauge arc
-        //float gaugeArc = endAngle - startAngle;
-        //float halfGaugeArc = gaugeArc / 2f;
+        /*
+        Limit the angle of the needle to be within the gauge arc
+        float gaugeArc = endAngle - startAngle;
+        float halfGaugeArc = gaugeArc / 2f;
+        */
+
         float lowerLimit = startAngle;
         float upperLimit = endAngle;
         angle = Math.max(lowerLimit, Math.min(upperLimit, angle));
 
         // Draw the gauge needle
-        Paint needlePaint = new Paint();
-        needlePaint.setColor(Color.RED);
         needlePaint.setStyle(Paint.Style.FILL);
         Path needlePath = new Path();
         needlePath.moveTo(centerX, centerY - radius);
@@ -130,14 +141,30 @@ public class GaugeView extends View {
         canvas.drawPath(needlePath, needlePaint);
         canvas.restore();
 
+        // Update the gauge color based on the acceleration value
+        int gaugeColor, needleColor;
+        if (accelerationValue < 2.0) {
+            needleColor = ColorUtils.blendARGB(Color.GREEN, Color.BLACK, 0.1f); // Set needle color to a darker shade of green for acceleration < 2.0
+            gaugeColor = ColorUtils.blendARGB(Color.GREEN, Color.BLACK, 0.1f); // Set gauge color to a darker shade of green for acceleration < 2.0
+        } else if (accelerationValue < 6.0) {
+            needleColor = ColorUtils.blendARGB(Color.YELLOW, Color.BLACK, 0.1f); // Set needle color to a darker shade of yellow for acceleration between 2.0 and 6.0
+            gaugeColor = Color.YELLOW; // Set gauge color to yellow for acceleration between 2.0 and 6.0
+        } else {
+            needleColor = Color.RED; // Set needle color to red for acceleration >= 6.0
+            gaugeColor = Color.RED; // Set gauge color to red for acceleration >= 6.0
+        }
+        gaugePaint.setColor(gaugeColor);
+        needlePaint.setColor(needleColor);
+
         // Draw the gauge outline
         canvas.drawArc(centerX - radius, centerY - radius, centerX + radius, centerY + radius, 180f, 180f, false, gaugePaint);
 
         // Draw the acceleration value text
-        String accelerationValueText = "Acceleration: " + accelerationValue + " m/s^2";
+        String accelerationValueText = "Acceleration: " + String.format("%.2f", accelerationValue) + " m/s^2";
         Paint accelerationValueTextPaint = new Paint();
         accelerationValueTextPaint.setColor(Color.BLACK);
-        accelerationValueTextPaint.setTextSize(24f);
+        accelerationValueTextPaint.setTextSize(50f);
+
         accelerationValueTextPaint.setTextAlign(Paint.Align.CENTER);
         accelerationValueTextPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
         float accelerationValueTextWidth = accelerationValueTextPaint.measureText(accelerationValueText);
