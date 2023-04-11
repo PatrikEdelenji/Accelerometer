@@ -8,8 +8,14 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Typeface;
+
 import android.util.AttributeSet;
+
+import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.FrameLayout;
+
 
 import androidx.core.graphics.ColorUtils;
 
@@ -30,10 +36,14 @@ public class GaugeView extends View {
     private float endAngle = 90f;
     private float numDivisions = 10;
     private float accelerationValueTextPadding = 10f;
+    private Button myButton;
+    private FrameLayout.LayoutParams buttonParams;
+
 
     public GaugeView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
+
     }
 
     private void init() {
@@ -172,5 +182,9 @@ public class GaugeView extends View {
         float accelerationValueTextY = centerY + radius + accelerationValueTextPadding + textHeight;
         canvas.drawText(accelerationValueText, accelerationValueTextX, accelerationValueTextY, accelerationValueTextPaint);
 
+
     }
+
+
+
 }

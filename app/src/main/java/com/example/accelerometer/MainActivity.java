@@ -1,11 +1,13 @@
 package com.example.accelerometer;
 
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.util.Log;
 
@@ -17,7 +19,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private SensorManager sensorManager;
     private Sensor accelerometer;
-    private TextView accelerationTextView;
+    //private TextView accelerationTextView;
     private AccelerationDataDbHelper dbHelper;
     private GaugeView GaugeView;
 
@@ -36,6 +38,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // Create an instance of the database helper
         dbHelper = new AccelerationDataDbHelper(this);
 
+        final Button button = findViewById(R.id.statistics_page_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // Code here executes on main thread after user presses button
+
+                // Add code to start the StatisticsPage activity
+                Intent intent = new Intent(MainActivity.this, StatisticsPage.class);
+                startActivity(intent);
+            }
+        });
 
     }
 

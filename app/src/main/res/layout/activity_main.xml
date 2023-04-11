@@ -29,4 +29,13 @@
         android:layout_below="@id/GaugeView"
         android:layout_centerHorizontal="true" />
 
+    <Button
+        android:id="@+id/statistics_page_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:text="Statistics" />
+
+
+
 </RelativeLayout>

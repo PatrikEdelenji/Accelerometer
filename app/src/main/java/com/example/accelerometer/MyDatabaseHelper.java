@@ -1,12 +1,14 @@
 package com.example.accelerometer;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 
 public class MyDatabaseHelper extends SQLiteOpenHelper {
@@ -28,6 +30,8 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
         this.context = context;
     }
 
+
+
     @Override
     public void onCreate(SQLiteDatabase db) {
         String query = "CREATE TABLE " + TABLE_NAME +
@@ -36,7 +40,7 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
 
                         COLUMN_XVALUE + " REAL, " +
                         COLUMN_YVALUE + " REAL, " +
-                        COLUMN_ZVALUE + " REAL)";
+                        COLUMN_ZVALUE + " REAL,)";
         db.execSQL(query);
         Log.d("TAG database :", "DATABASE CREATED");
 
@@ -62,6 +66,38 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
 
     }
+
+    public void fetchAllData() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME, null);
+        while (cursor.moveToNext()) {
+            int idIndex = cursor.getColumnIndex(COLUMN_ID);
+            int xValueIndex = cursor.getColumnIndex(COLUMN_XVALUE);
+            int yValueIndex = cursor.getColumnIndex(COLUMN_YVALUE);
+            int zValueIndex = cursor.getColumnIndex(COLUMN_ZVALUE);
+            int timestampIndex = cursor.getColumnIndex(COLUMN_TIMESTAMP);
+
+            if (idIndex != -1 && xValueIndex != -1 && yValueIndex != -1 && zValueIndex != -1 && timestampIndex != -1) {
+                int id = cursor.getInt(idIndex);
+                double xValue = cursor.getDouble(xValueIndex);
+                double yValue = cursor.getDouble(yValueIndex);
+                double zValue = cursor.getDouble(zValueIndex);
+                long timestamp = cursor.getLong(timestampIndex);
+
+                // Create an AccelerometerData object with the retrieved data
+                AccelerometerData data = new AccelerometerData(id, xValue, yValue, zValue, timestamp);
+
+                // Process the retrieved data as needed
+                // ...
+            } else {
+                // Handle the case where a column name is not found in the cursor
+                Log.e("TAG", "Column not found in cursor");
+            }
+        }
+        cursor.close();
+        db.close();
+    }
+
 }
 
 
