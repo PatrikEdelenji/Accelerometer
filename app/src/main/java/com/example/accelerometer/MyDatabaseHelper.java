@@ -8,8 +8,12 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import java.text.ParseException;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Locale;
 
 public class MyDatabaseHelper extends SQLiteOpenHelper {
 
@@ -22,6 +26,7 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
     private static final String COLUMN_XVALUE = "xValue";
     private static final String COLUMN_YVALUE = "yValue";
     private static final String COLUMN_ZVALUE = "zValue";
+    private static final String COLUMN_TIMESTAMP = "timestamp";
 
     public MyDatabaseHelper(@Nullable Context context) {
         //super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -34,16 +39,15 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String query = "CREATE TABLE " + TABLE_NAME +
-                        " (" +
-                        COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-
-                        COLUMN_XVALUE + " REAL, " +
-                        COLUMN_YVALUE + " REAL, " +
-                        COLUMN_ZVALUE + " REAL,)";
+        String query = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME +
+                " (" +
+                COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                COLUMN_XVALUE + " REAL, " +
+                COLUMN_YVALUE + " REAL, " +
+                COLUMN_ZVALUE + " REAL, " +
+                COLUMN_TIMESTAMP + " DATETIME DEFAULT CURRENT_TIMESTAMP)"; // Add TIMESTAMP column as INTEGER
         db.execSQL(query);
         Log.d("TAG database :", "DATABASE CREATED");
-
     }
 
     /*
@@ -84,11 +88,9 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
                 double zValue = cursor.getDouble(zValueIndex);
                 long timestamp = cursor.getLong(timestampIndex);
 
-                // Create an AccelerometerData object with the retrieved data
-                AccelerometerData data = new AccelerometerData(id, xValue, yValue, zValue, timestamp);
-
-                // Process the retrieved data as needed
+                // Process the retrieved data using the id, xValue, yValue, zValue, and timestamp values
                 // ...
+                Log.d("TAG", "Retrieved data - id: " + id + ", xValue: " + xValue + ", yValue: " + yValue + ", zValue: " + zValue + ", timestamp: " + timestamp);
             } else {
                 // Handle the case where a column name is not found in the cursor
                 Log.e("TAG", "Column not found in cursor");
@@ -97,6 +99,44 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         db.close();
     }
+
+    public double fetchHighestAccelerationForCurrentDay() {
+        double highestAcceleration = 0.0;
+
+        // Get the current date and time
+        Date currentDate = new Date();
+
+        // Convert the date to the required format for the query
+        SimpleDateFormat sdfFormatted = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String formattedDate = sdfFormatted.format(currentDate);
+
+        // Query to fetch the highest acceleration value for one day
+        String query = "SELECT MAX(acceleration_x) AS max_acceleration_x, " +
+                "MAX(" + COLUMN_XVALUE + ") AS max_acceleration_y, " +
+                "MAX(acceleration_z) AS max_acceleration_z " +
+                "FROM " + TABLE_NAME  +
+                " WHERE date(timestamp/1000, 'unixepoch', 'localtime') = ?";
+
+        // Execute the query and fetch the result
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery(query, new String[]{formattedDate});
+        if (cursor != null && cursor.moveToFirst()) {
+            int maxAccelerationXIndex = cursor.getColumnIndex("max_acceleration_x");
+            int maxAccelerationYIndex = cursor.getColumnIndex("max_acceleration_y");
+            int maxAccelerationZIndex = cursor.getColumnIndex("max_acceleration_z");
+            if (maxAccelerationXIndex >= 0 && maxAccelerationYIndex >= 0 && maxAccelerationZIndex >= 0) {
+                highestAcceleration = Math.max(Math.max(
+                        cursor.getDouble(maxAccelerationXIndex),
+                        cursor.getDouble(maxAccelerationYIndex)
+                ), cursor.getDouble(maxAccelerationZIndex));
+            }
+            cursor.close();
+        }
+        db.close();
+
+        return highestAcceleration;
+    }
+
 
 }
 
