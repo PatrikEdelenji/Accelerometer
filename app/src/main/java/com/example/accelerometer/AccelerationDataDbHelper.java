@@ -20,7 +20,7 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
     public static final String COLUMN_TOTAL_ACCELERATION = "acceleration";
     public static final String COLUMN_X_ACCELERATION = "x";
     public static final String COLUMN_Y_ACCELERATION = "y";
-    public static final String COLUMN_Z_ACCELERATION = "Z";
+    public static final String COLUMN_Z_ACCELERATION = "z";
     public static final String COLUMN_TIMESTAMP = "timestamp";
 
     public AccelerationDataDbHelper(Context context) {
@@ -29,13 +29,13 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + "("
-                + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + COLUMN_TOTAL_ACCELERATION + " REAL,"
-                + COLUMN_X_ACCELERATION + " REAL,"
-                + COLUMN_Y_ACCELERATION + " REAL,"
-                + COLUMN_Z_ACCELERATION + " REAL,"
-                + COLUMN_TIMESTAMP + " INTEGER" + ")";
+        String CREATE_TABLE = "CREATE TABLE acceleration_data (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                " acceleration REAL," +
+                " x REAL," +
+                " y REAL," +
+                " z REAL," +
+                " timestamp INTEGER)";
         db.execSQL(CREATE_TABLE);
     }
 
@@ -91,6 +91,7 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
 
             if (idIndex != -1 && xValueIndex != -1 && yValueIndex != -1 && zValueIndex != -1 && timestampIndex != -1) {
                 int id = cursor.getInt(idIndex);
+                double totalValue = cursor.getDouble(totalValueIndex);
                 double xValue = cursor.getDouble(xValueIndex);
                 double yValue = cursor.getDouble(yValueIndex);
                 double zValue = cursor.getDouble(zValueIndex);
@@ -122,18 +123,13 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
         String query = "SELECT MAX(acceleration) AS max_acceleration FROM " + TABLE_NAME  +
                 " WHERE date(timestamp/1000, 'unixepoch', 'localtime') = ?";
 
-        // Execute the query and fetch the result
+// Execute the query and fetch the result
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = db.rawQuery(query, new String[]{formattedDate});
         if (cursor != null && cursor.moveToFirst()) {
-            int maxAccelerationXIndex = cursor.getColumnIndex("max_acceleration_x");
-            int maxAccelerationYIndex = cursor.getColumnIndex("max_acceleration_y");
-            int maxAccelerationZIndex = cursor.getColumnIndex("max_acceleration_z");
-            if (maxAccelerationXIndex >= 0 && maxAccelerationYIndex >= 0 && maxAccelerationZIndex >= 0) {
-                highestAcceleration = Math.max(Math.max(
-                        cursor.getDouble(maxAccelerationXIndex),
-                        cursor.getDouble(maxAccelerationYIndex)
-                ), cursor.getDouble(maxAccelerationZIndex));
+            int maxAccelerationIndex = cursor.getColumnIndex("max_acceleration");
+            if (maxAccelerationIndex >= 0 ) {
+                highestAcceleration = cursor.getDouble(maxAccelerationIndex);
             }
             cursor.close();
         }
