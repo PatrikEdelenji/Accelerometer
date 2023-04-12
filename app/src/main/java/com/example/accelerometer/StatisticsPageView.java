@@ -4,7 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 
-public class StatisticsPage extends AppCompatActivity {
+public class StatisticsPageView extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,13 +23,13 @@ public class StatisticsPage extends AppCompatActivity {
 
         double highestAcceleration = dbHelper.fetchHighestAccelerationForCurrentDay();
         if (highestAcceleration >= 0) {
-            Log.d("StatisticsPage", "Highest acceleration for current day: " + highestAcceleration);
+            Log.d("StatisticsPageView", "Highest acceleration for current day: " + highestAcceleration);
         } else {
-            Log.d("StatisticsPage", "No data found for current day.");
+            Log.d("StatisticsPageView", "No data found for current day.");
         }
 
 
-        // You can then use the 'highestAcceleration' value as needed in your 'StatisticsPage' class
+        // You can then use the 'highestAcceleration' value as needed in your 'StatisticsPageView' class
 
 
 

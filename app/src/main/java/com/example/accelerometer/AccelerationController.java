@@ -8,20 +8,19 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.util.Log;
 
 
 import androidx.appcompat.app.AppCompatActivity;
 
 
-public class MainActivity extends AppCompatActivity implements SensorEventListener {
+public class AccelerationController extends AppCompatActivity implements SensorEventListener {
 
     private SensorManager sensorManager;
     private Sensor accelerometer;
     //private TextView accelerationTextView;
     private AccelerationDataDbHelper dbHelper;
-    private GaugeView GaugeView;
+    private AccelerationView AccelerationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +32,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
         // Get a reference to the TextView that will show the acceleration values
-        GaugeView = findViewById(R.id.GaugeView);
+        AccelerationView = findViewById(R.id.GaugeView);
 
         // Create an instance of the database helper
         dbHelper = new AccelerationDataDbHelper(this);
@@ -43,8 +42,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             public void onClick(View v) {
                 // Code here executes on main thread after user presses button
 
-                // Add code to start the StatisticsPage activity
-                Intent intent = new Intent(MainActivity.this, StatisticsPage.class);
+                // Add code to start the StatisticsPageView activity
+                Intent intent = new Intent(AccelerationController.this, StatisticsPageView.class);
                 startActivity(intent);
             }
         });
@@ -75,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             float z = event.values[2];
             float acceleration = (float) Math.sqrt(x * x + y * y + z * z) - 9.81f;
 
-            GaugeView.setAccelerationValue(acceleration);
+            AccelerationView.setAccelerationValue(acceleration);
 
             /* Update the TextView with the new acceleration value
             TextView accelerationTextView = findViewById(R.id.accelerationTextView);

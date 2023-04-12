@@ -13,7 +13,7 @@
         android:theme="@style/Theme.AppCompat.Light"
         >
         <activity
-            android:name=".MainActivity"
+            android:name=".AccelerationController"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -23,7 +23,7 @@
         </activity>
 
         <activity
-            android:name=".StatisticsPage" />
+            android:name=".StatisticsPageView" />
 
     </application>
 

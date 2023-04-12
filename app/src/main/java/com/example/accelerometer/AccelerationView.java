@@ -11,7 +11,6 @@ import android.graphics.Typeface;
 
 import android.util.AttributeSet;
 
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -21,7 +20,7 @@ import androidx.core.graphics.ColorUtils;
 
 import java.util.Locale;
 
-public class GaugeView extends View {
+public class AccelerationView extends View {
 
     private float accelerationValue = 0f;
     private Paint gaugePaint;
@@ -40,7 +39,7 @@ public class GaugeView extends View {
     private FrameLayout.LayoutParams buttonParams;
 
 
-    public GaugeView(Context context, AttributeSet attrs) {
+    public AccelerationView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
 

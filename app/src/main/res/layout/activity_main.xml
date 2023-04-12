@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.example.accelerometer.GaugeView
+    <com.example.accelerometer.AccelerationView
         android:id="@+id/GaugeView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
