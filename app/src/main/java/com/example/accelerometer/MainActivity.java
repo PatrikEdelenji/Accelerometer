@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             long timestamp = System.currentTimeMillis();
 
             // Add acceleration data to the database
-            dbHelper.addAccelerationData(acceleration, timestamp);
+            dbHelper.addAccelerationData(acceleration, x, y, z, timestamp);
         }
     }
 
