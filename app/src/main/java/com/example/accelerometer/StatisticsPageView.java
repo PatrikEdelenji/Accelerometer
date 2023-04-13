@@ -28,6 +28,13 @@ public class StatisticsPageView extends AppCompatActivity {
             Log.d("StatisticsPageView", "No data found for current day.");
         }
 
+        double averageTotalAcceleration = dbHelper.calculateAverageTotalAcceleration();
+        if (averageTotalAcceleration >= 0) {
+            Log.d("StatisticsPageView", "Highest acceleration for current day: " + averageTotalAcceleration);
+        } else {
+            Log.d("StatisticsPageView", "No data found for current day.");
+        }
+
 
         // You can then use the 'highestAcceleration' value as needed in your 'StatisticsPageView' class
 

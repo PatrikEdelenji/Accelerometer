@@ -2,13 +2,15 @@ package com.example.accelerometer;
 
 public class AccelerationDataModel {
     private int id;
+    private double totalValue;
     private double xValue;
     private double yValue;
     private double zValue;
     private long timestamp;
 
-    public AccelerationDataModel(int id, double xValue, double yValue, double zValue) {
+    public AccelerationDataModel(int id, double totalValue, double xValue, double yValue, double zValue, long timestamp) {
         this.id = id;
+        this.totalValue = totalValue;
         this.xValue = xValue;
         this.yValue = yValue;
         this.zValue = zValue;
@@ -22,6 +24,14 @@ public class AccelerationDataModel {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public double getTotalValue() {
+        return totalValue;
+    }
+
+    public void setTotalValue() {
+        this.totalValue = totalValue;
     }
 
     public double getXValue() {

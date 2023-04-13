@@ -8,7 +8,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class AccelerationDataDbHelper extends SQLiteOpenHelper {
@@ -77,8 +79,9 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-
-    public void fetchAllData() {
+/*
+    public List<AccelerationDataModel> fetchAllData() {
+        List<AccelerationDataModel> dataList = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME, null);
         while (cursor.moveToNext()) {
@@ -97,9 +100,11 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
                 double zValue = cursor.getDouble(zValueIndex);
                 long timestamp = cursor.getLong(timestampIndex);
 
-                // Process the retrieved data using the id, xValue, yValue, zValue, and timestamp values
-                // ...
-                Log.d("TAG", "Retrieved data - id: " + id + ", xValue: " + xValue + ", yValue: " + yValue + ", zValue: " + zValue + ", timestamp: " + timestamp);
+                // Create a MyDataObject instance with retrieved data
+                AccelerationDataModel dataObject = new AccelerationDataModel(id, totalValue, xValue, yValue, zValue, timestamp);
+
+                // Add the data object to the list
+                dataList.add(dataObject);
             } else {
                 // Handle the case where a column name is not found in the cursor
                 Log.e("TAG", "Column not found in cursor");
@@ -107,7 +112,9 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
         }
         cursor.close();
         db.close();
+        return dataList;
     }
+    */
 
     public double fetchHighestAccelerationForCurrentDay() {
         double highestAcceleration = 0.0;
@@ -123,7 +130,7 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
         String query = "SELECT MAX(acceleration) AS max_acceleration FROM " + TABLE_NAME  +
                 " WHERE date(timestamp/1000, 'unixepoch', 'localtime') = ?";
 
-// Execute the query and fetch the result
+        // Execute the query and fetch the result
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = db.rawQuery(query, new String[]{formattedDate});
         if (cursor != null && cursor.moveToFirst()) {
@@ -136,5 +143,38 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
         db.close();
 
         return highestAcceleration;
+    }
+
+    public double calculateAverageTotalAcceleration() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT AVG(" + COLUMN_TOTAL_ACCELERATION + ") FROM " + TABLE_NAME, null);
+        double average = 0;
+        if (cursor.moveToFirst()) {
+            average = cursor.getDouble(0);
+        }
+        cursor.close();
+        db.close();
+        return average;
+    }
+
+    public double calculateTimeSpentAboveLimit() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT SUM(CASE WHEN acceleration > 3.5 THEN timestamp - prev_timestamp ELSE 0 END) AS time_above_threshold" +
+                " FROM ( SELECT timestamp, acceleration, LAG(timestamp) OVER (ORDER BY timestamp) AS prev_timestamp FROM acceleration_data" +
+                " AS subquery) sub" , null);
+
+        // Process the cursor and retrieve the calculated time above threshold
+        double timeAboveThreshold = 0.0;
+        if (cursor.moveToFirst()) {
+            int columnIndex = cursor.getColumnIndex("time_above_threshold");
+            if (columnIndex >= 0) {
+                timeAboveThreshold = cursor.getDouble(columnIndex);
+            }
+        }
+
+        cursor.close();
+        db.close();
+
+        return timeAboveThreshold;
     }
 }
