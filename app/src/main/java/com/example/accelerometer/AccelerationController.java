@@ -78,17 +78,14 @@ public class AccelerationController extends AppCompatActivity implements SensorE
             float accelerationThreshold = 0.1f; // Set your acceleration threshold here
             if (Math.abs(acceleration) > accelerationThreshold) {
                 AccelerationView.setAccelerationValue(acceleration);
-                Log.d("Sensor readings too low!", "Acceleration: " + acceleration);
-
-            /* Update the TextView with the new acceleration value
-            TextView accelerationTextView = findViewById(R.id.accelerationTextView);
-            accelerationTextView.setText("Acceleration: " + acceleration + " m/s²");
-            */
 
                 long timestamp = System.currentTimeMillis();
 
                 // Add acceleration data to the database
                 dbHelper.addAccelerationData(acceleration, x, y, z, timestamp);
+            }
+            else {
+                Log.d("Sensor readings too low!", "Acceleration: " + acceleration);
             }
         }
     }

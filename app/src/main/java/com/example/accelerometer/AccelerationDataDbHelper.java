@@ -160,8 +160,10 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
     public double calculateTimeSpentAboveLimit() {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT SUM(CASE WHEN acceleration > 3.5 THEN timestamp - prev_timestamp ELSE 0 END) AS time_above_threshold" +
-                " FROM ( SELECT timestamp, acceleration, LAG(timestamp) OVER (ORDER BY timestamp) AS prev_timestamp FROM acceleration_data" +
-                " AS subquery) sub" , null);
+                " FROM ( SELECT a1.timestamp, a1.acceleration, COALESCE(MAX(a2.timestamp), 0) AS prev_timestamp FROM acceleration_data a1" +
+                " LEFT JOIN acceleration_data a2 ON a1.timestamp > a2.timestamp" +
+                " GROUP BY a1.timestamp, a1.acceleration" +
+                " ) subquery", null);
 
         // Process the cursor and retrieve the calculated time above threshold
         double timeAboveThreshold = 0.0;
@@ -177,4 +179,68 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
 
         return timeAboveThreshold;
     }
+
+    public String formatTimeSpentAboveLimit(double timeInMillis) {
+        long seconds = (long) (timeInMillis / 1000);
+        long minutes = seconds / 60;
+        long hours = minutes / 60;
+
+        // Calculate remaining minutes and seconds
+        minutes %= 60;
+        seconds %= 60;
+
+        // Format the time as "HH:mm:ss" and add labels
+        String formattedTime = String.format("%d hours, %d minutes, %d seconds", hours, minutes, seconds);
+
+        return formattedTime;
+    }
+
+
+
+    public int countAccelerationBreaches() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) AS breach_count" +
+                " FROM (" +
+                "   SELECT acceleration, LAG(acceleration) OVER (ORDER BY timestamp) AS prev_acceleration" +
+                "   FROM acceleration_data" +
+                " )" +
+                " WHERE acceleration > 3.5 AND prev_acceleration <= 3.5", null);
+
+        // Process the cursor and retrieve the breach count
+        int breachCount = 0;
+        if (cursor.moveToFirst()) {
+            int columnIndex = cursor.getColumnIndex("breach_count");
+            if (columnIndex >= 0) {
+                breachCount = cursor.getInt(columnIndex);
+            }
+        }
+
+        cursor.close();
+        db.close();
+
+        return breachCount;
+    }
+
+
+    public double calculateBiggestAccelerationDifference() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT MAX(ABS(acceleration - prev_acceleration)) AS max_difference" +
+                " FROM ( SELECT acceleration, LAG(acceleration) OVER (ORDER BY timestamp) AS prev_acceleration FROM acceleration_data" +
+                " ) subquery", null);
+
+        // Process the cursor and retrieve the maximum difference
+        double maxDifference = 0.0;
+        if (cursor.moveToFirst()) {
+            int columnIndex = cursor.getColumnIndex("max_difference");
+            if (columnIndex >= 0) {
+                maxDifference = cursor.getDouble(columnIndex);
+            }
+        }
+
+        cursor.close();
+        db.close();
+
+        return maxDifference;
+    }
+
 }
