@@ -75,14 +75,25 @@ public class StatisticsPageView extends AppCompatActivity {
 
 
 // The amount of times the acceleration limit was breached
-        double numberOfBreaches = dbHelper.countAccelerationBreaches();
-        TextView numberOfBreachesTextView = findViewById(R.id.numberOfBreachesTextView);
-        if (numberOfBreaches >= 0){
-            numberOfBreachesTextView.setText("Number of breaches: " + String.valueOf(numberOfBreaches));
-            numberOfBreachesTextView.setTextColor(Color.RED);
+        double numberOfAggressiveAccelerationBreaches = dbHelper.getAggressiveAccelerationCount();
+        TextView numberOfAggressiveAccelerationBreachesTextView = findViewById(R.id.numberOfAggressiveAccelerationTextView);
+        if (numberOfAggressiveAccelerationBreaches >= 0){
+            numberOfAggressiveAccelerationBreachesTextView.setText("Broj naglih ubrzavanja: " + String.valueOf(numberOfAggressiveAccelerationBreaches));
+            numberOfAggressiveAccelerationBreachesTextView.setTextColor(Color.RED);
         }
         else{
-            numberOfBreachesTextView.setText("Number of breaches: No data");
+            numberOfAggressiveAccelerationBreachesTextView.setText("Broj naglih ubrzavanja: Nema podataka");
+        }
+
+
+        double numberOfAggressiveBrakingBreaches = dbHelper.getAggressiveBrakingCount();
+        TextView numberOfAggressiveBrakingBreachesTextView = findViewById(R.id.numberOfAggressiveBreakingTextView);
+        if (numberOfAggressiveBrakingBreaches >= 0){
+            numberOfAggressiveBrakingBreachesTextView.setText("Broj agresivnih kočenja: " + String.valueOf(numberOfAggressiveBrakingBreaches));
+            numberOfAggressiveBrakingBreachesTextView.setTextColor(Color.RED);
+        }
+        else{
+            numberOfAggressiveBrakingBreachesTextView.setText("Broj agresivnih kočenja: Nema podataka");
         }
 
     }

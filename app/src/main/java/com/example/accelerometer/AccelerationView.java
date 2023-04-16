@@ -155,7 +155,7 @@ public class AccelerationView extends View {
         if (accelerationValue < 2.0) {
             needleColor = ColorUtils.blendARGB(Color.GREEN, Color.BLACK, 0.1f); // Set needle color to a darker shade of green for acceleration < 2.0
             gaugeColor = ColorUtils.blendARGB(Color.GREEN, Color.BLACK, 0.1f); // Set gauge color to a darker shade of green for acceleration < 2.0
-        } else if (accelerationValue < 6.0) {
+        } else if (accelerationValue < 2.943) {
             needleColor = ColorUtils.blendARGB(Color.YELLOW, Color.BLACK, 0.1f); // Set needle color to a darker shade of yellow for acceleration between 2.0 and 6.0
             gaugeColor = Color.YELLOW; // Set gauge color to yellow for acceleration between 2.0 and 6.0
         } else {

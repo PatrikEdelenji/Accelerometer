@@ -197,7 +197,7 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
 
 
 
-    public int countAccelerationBreaches() {
+    /*public int countAccelerationBreaches() {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT COUNT(*) AS breach_count" +
                 " FROM (" +
@@ -219,7 +219,7 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
         db.close();
 
         return breachCount;
-    }
+    }*/
 
 
     public double calculateBiggestAccelerationDifference() {
@@ -243,4 +243,62 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
         return maxDifference;
     }
 
+
+
+    public int getAggressiveBrakingCount() {
+        int count = 0;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT acceleration FROM acceleration_data ORDER BY timestamp DESC", null);
+
+        float prevAcceleration = 0.0f;
+        boolean isDecelerationAgg = false; // Flag to track if aggressive deceleration is already counted
+
+        if (cursor.moveToFirst()) {
+            do {
+                float acceleration = cursor.getFloat(cursor.getColumnIndexOrThrow("acceleration"));
+                if (Math.abs(acceleration - prevAcceleration) > 2.943 && acceleration < prevAcceleration && !isDecelerationAgg) {
+                    count++;
+                    isDecelerationAgg = true; // Set the flag to true after counting aggressive deceleration
+                } else if (acceleration > prevAcceleration) {
+                    isDecelerationAgg = false; // Reset the flag if acceleration goes above previous value
+                }
+                prevAcceleration = acceleration;
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        db.close();
+
+        return count;
+    }
+
+    public int getAggressiveAccelerationCount() {
+        int count = 0;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT acceleration FROM acceleration_data ORDER BY timestamp DESC", null);
+
+        float prevAcceleration = 0.0f;
+        boolean isAccelerationAgg = false; // Flag to track if aggressive acceleration is already counted
+
+        if (cursor.moveToFirst()) {
+            do {
+                float acceleration = cursor.getFloat(cursor.getColumnIndexOrThrow("acceleration"));
+                if (Math.abs(acceleration - prevAcceleration) > 2.943 && acceleration > prevAcceleration && !isAccelerationAgg) {
+                    count++;
+                    isAccelerationAgg = true; // Set the flag to true after counting aggressive acceleration
+                } else if (acceleration < prevAcceleration) {
+                    isAccelerationAgg = false; // Reset the flag if acceleration goes below previous value
+                }
+                prevAcceleration = acceleration;
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        db.close();
+
+        return count;
+    }
+
+
 }
+

@@ -58,7 +58,17 @@
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/numberOfBreachesTextView"
+        android:id="@+id/numberOfAggressiveBreakingTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
+        android:text="Times when limit was breached: "
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/numberOfAggressiveAccelerationTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
