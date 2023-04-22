@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select filter:" />
+
+    <RadioGroup
+        android:id="@+id/radioGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <RadioButton
+            android:id="@+id/todaysValues"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Today's values" />
+
+        <RadioButton
+            android:id="@+id/values24hAgo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Values from 24h ago" />
+
+        <RadioButton
+            android:id="@+id/lastWeekValues"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Values from last week" />
+
+        <RadioButton
+            android:id="@+id/lastMonthValues"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Values from last month" />
+
+        <RadioButton
+            android:id="@+id/customValues"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Custom values" />
+
+    </RadioGroup>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <DatePicker
+            android:id="@+id/fromDatePicker"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:calendarViewShown="false"
+            android:datePickerMode="calendar" />
+
+        <DatePicker
+            android:id="@+id/toDatePicker"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:calendarViewShown="false"
+            android:datePickerMode="calendar" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/confirmButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Confirm" />
+
+</LinearLayout>

@@ -2,12 +2,27 @@ package com.example.accelerometer;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Dialog;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
+import android.app.DatePickerDialog;
+import java.util.Calendar;
 
 public class StatisticsPageView extends AppCompatActivity {
+
+    private TextView accelerationTextView;
+    private TextView highestAccelerationTextView;
+    private TextView biggestDifferenceTextView;
+    private TextView averageTotalAccelerationTextView;
+    private TextView timeAboveLimitTextView;
+    private TextView numberOfAggressiveBreakingTextView;
+    private TextView numberOfAggressiveAccelerationTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -15,90 +30,80 @@ public class StatisticsPageView extends AppCompatActivity {
         setContentView(R.layout.statistics_page);
         AccelerationDataDbHelper dbHelper = new AccelerationDataDbHelper(this);
 
-
-        // Fetch the highest acceleration value for the current day
-        double highestAcceleration = dbHelper.fetchHighestAccelerationForCurrentDay();
-        if (highestAcceleration >= 0) {
-            Log.d("StatisticsPageView", "Highest acceleration for current day: " + highestAcceleration + "m/s2");
-
-            // Update the UI with the fetched highest acceleration value
-            TextView highestAccelerationTextView = findViewById(R.id.highestAccelerationTextView);
-            highestAccelerationTextView.setText("Highest Acceleration: " + highestAcceleration + "m/s2");
-            if (highestAcceleration >= 3.5) {
-                highestAccelerationTextView.setTextColor(Color.RED);
-            } else {
-                highestAccelerationTextView.setTextColor(Color.parseColor("#006400")); // Set text color to dark green
+        Button sortButton = findViewById(R.id.sortButton);
+        sortButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showFilterDialog();
             }
+        });
 
+
+
+        // Find each TextView by ID
+        accelerationTextView = findViewById(R.id.accelerationTextView);
+        highestAccelerationTextView = findViewById(R.id.highestAccelerationTextView);
+        biggestDifferenceTextView = findViewById(R.id.biggestDifferenceTextView);
+        averageTotalAccelerationTextView = findViewById(R.id.averageTotalAccelerationTextView);
+        timeAboveLimitTextView = findViewById(R.id.timeAboveLimitTextView);
+        numberOfAggressiveBreakingTextView = findViewById(R.id.numberOfAggressiveBreakingTextView);
+        numberOfAggressiveAccelerationTextView = findViewById(R.id.numberOfAggressiveAccelerationTextView);
+
+
+        // Get values from the database
+        double highestAcceleration = dbHelper.calculateAverageTotalAcceleration();
+        double averageAcceleration = dbHelper.calculateAverageTotalAcceleration();
+        double timeAboveLimit = dbHelper.calculateTimeSpentAboveLimit();
+        int aggressiveBreaking = dbHelper.getAggressiveBrakingCount();
+        int aggressiveAcceleration = dbHelper.getAggressiveAccelerationCount();
+
+        // Set text and colors for each TextView
+        accelerationTextView.setText(String.format("%.2f m/s^2", highestAcceleration));
+        highestAccelerationTextView.setText(String.format("%.2f m/s^2", highestAcceleration));
+        if (highestAcceleration >= 3.5f) {
+            highestAccelerationTextView.setTextColor(Color.RED);
         } else {
-            Log.d("StatisticsPageView", "No data found for current day.");
+            highestAccelerationTextView.setTextColor(Color.GREEN);
         }
-
-
-
-        double biggestDifference = dbHelper.calculateBiggestAccelerationDifference();
-        TextView biggestDifferenceTextView = findViewById(R.id.biggestDifferenceTextView);
-        if(biggestDifference >= 0) {
-            biggestDifferenceTextView.setText("Highest acceleration difference: " + biggestDifference + "m/s2");
-
-        }
-
-
-        // Calculate the average total acceleration
-        double averageTotalAcceleration = dbHelper.calculateAverageTotalAcceleration();
-        if (averageTotalAcceleration >= 0) {
-            TextView averageTotalAccelerationTextView = findViewById(R.id.averageTotalAccelerationTextView);
-            averageTotalAccelerationTextView.setText("Average Total Acceleration: " + averageTotalAcceleration + "m/s2");
-            if(averageTotalAcceleration >= 3.5) {
-                Log.d("StatisticsPageView", "Average total acceleration: " + averageTotalAcceleration + "m/s2");
-                averageTotalAccelerationTextView.setTextColor(Color.RED);
-                // Update the UI with the calculated average total acceleration value
-            }
-            else {
-                averageTotalAccelerationTextView.setTextColor(Color.parseColor("#006400")); // Set text color to dark green
-            }
+        averageTotalAccelerationTextView.setText(String.format("%.2f m/s^2", averageAcceleration));
+        if (averageAcceleration >= 3.5f) {
+            averageTotalAccelerationTextView.setTextColor(Color.RED);
         } else {
-            Log.d("StatisticsPageView", "No data found for current day.");
+            averageTotalAccelerationTextView.setTextColor(Color.GREEN);
         }
-
-
-        // Calculate time above limit
-        double timeAboveLimitInMillis = dbHelper.calculateTimeSpentAboveLimit();
-
-        // Format time above limit value as hours, minutes, and seconds
-        String formattedTimeAboveLimit = dbHelper.formatTimeSpentAboveLimit(timeAboveLimitInMillis);
-
-        // Update the text of the 'timeAboveLimitTextView' with the formatted time above limit value
-        TextView timeAboveLimitTextView = findViewById(R.id.timeAboveLimitTextView);
-        timeAboveLimitTextView.setText("Time above the limit: " + formattedTimeAboveLimit);
-
-
-
-// The amount of times the acceleration limit was breached
-        double numberOfAggressiveAccelerationBreaches = dbHelper.getAggressiveAccelerationCount();
-        TextView numberOfAggressiveAccelerationBreachesTextView = findViewById(R.id.numberOfAggressiveAccelerationTextView);
-        if (numberOfAggressiveAccelerationBreaches >= 0){
-            numberOfAggressiveAccelerationBreachesTextView.setText("Broj naglih ubrzavanja: " + String.valueOf(numberOfAggressiveAccelerationBreaches));
-            numberOfAggressiveAccelerationBreachesTextView.setTextColor(Color.RED);
+        timeAboveLimitTextView.setText(String.format("%d seconds", timeAboveLimit));
+        if (timeAboveLimit == 0) {
+            timeAboveLimitTextView.setTextColor(Color.GREEN);
+        } else {
+            timeAboveLimitTextView.setTextColor(Color.BLACK);
         }
-        else{
-            numberOfAggressiveAccelerationBreachesTextView.setText("Broj naglih ubrzavanja: Nema podataka");
-        }
-
-
-        double numberOfAggressiveBrakingBreaches = dbHelper.getAggressiveBrakingCount();
-        TextView numberOfAggressiveBrakingBreachesTextView = findViewById(R.id.numberOfAggressiveBreakingTextView);
-        if (numberOfAggressiveBrakingBreaches >= 0){
-            numberOfAggressiveBrakingBreachesTextView.setText("Broj agresivnih kočenja: " + String.valueOf(numberOfAggressiveBrakingBreaches));
-            numberOfAggressiveBrakingBreachesTextView.setTextColor(Color.RED);
-        }
-        else{
-            numberOfAggressiveBrakingBreachesTextView.setText("Broj agresivnih kočenja: Nema podataka");
-        }
-
+        numberOfAggressiveBreakingTextView.setText(String.format("%d", aggressiveBreaking));
+        numberOfAggressiveBreakingTextView.setTextColor(Color.RED);
+        numberOfAggressiveAccelerationTextView.setText(String.format("%d", aggressiveAcceleration));
+        numberOfAggressiveAccelerationTextView.setTextColor(Color.RED);
     }
 
 
+    private void showFilterDialog() {
+        // Create a new dialog
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.statistics_page_menu);
 
+        // Find the filter button in the dialog and set its OnClickListener
+        Button filterButton = dialog.findViewById(R.id.sortButton);
+        filterButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Handle filter button click here
+                dialog.dismiss(); // Close the dialog
+            }
+        });
+
+        // Display the dialog
+        dialog.show();
+    }
 
 }
+
+
+
