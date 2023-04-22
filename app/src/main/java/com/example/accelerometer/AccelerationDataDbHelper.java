@@ -79,225 +79,84 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-/*
-    public List<AccelerationDataModel> fetchAllData() {
-        List<AccelerationDataModel> dataList = new ArrayList<>();
+
+    // Get the highest acceleration within a time range
+    public double getHighestAcceleration(long startTimestamp, long endTimestamp) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME, null);
-        while (cursor.moveToNext()) {
-            int idIndex = cursor.getColumnIndex(COLUMN_ID);
-            int totalValueIndex = cursor.getColumnIndex(COLUMN_TOTAL_ACCELERATION);
-            int xValueIndex = cursor.getColumnIndex(COLUMN_X_ACCELERATION);
-            int yValueIndex = cursor.getColumnIndex(COLUMN_Y_ACCELERATION);
-            int zValueIndex = cursor.getColumnIndex(COLUMN_Z_ACCELERATION);
-            int timestampIndex = cursor.getColumnIndex(COLUMN_TIMESTAMP);
-
-            if (idIndex != -1 && xValueIndex != -1 && yValueIndex != -1 && zValueIndex != -1 && timestampIndex != -1) {
-                int id = cursor.getInt(idIndex);
-                double totalValue = cursor.getDouble(totalValueIndex);
-                double xValue = cursor.getDouble(xValueIndex);
-                double yValue = cursor.getDouble(yValueIndex);
-                double zValue = cursor.getDouble(zValueIndex);
-                long timestamp = cursor.getLong(timestampIndex);
-
-                // Create a MyDataObject instance with retrieved data
-                AccelerationDataModel dataObject = new AccelerationDataModel(id, totalValue, xValue, yValue, zValue, timestamp);
-
-                // Add the data object to the list
-                dataList.add(dataObject);
-            } else {
-                // Handle the case where a column name is not found in the cursor
-                Log.e("TAG", "Column not found in cursor");
-            }
-        }
-        cursor.close();
-        db.close();
-        return dataList;
-    }
-    */
-
-    public double fetchHighestAccelerationForCurrentDay() {
+        String query = "SELECT MAX(acceleration) FROM trip WHERE timestamp BETWEEN ? AND ?";
+        String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp) };
+        Cursor cursor = db.rawQuery(query, args);
         double highestAcceleration = 0.0;
-
-        // Get the current date and time
-        Date currentDate = new Date();
-
-        // Convert the date to the required format for the query
-        SimpleDateFormat sdfFormatted = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String formattedDate = sdfFormatted.format(currentDate);
-
-        // Query to fetch the highest acceleration value for one day
-        String query = "SELECT MAX(acceleration) AS max_acceleration FROM " + TABLE_NAME  +
-                " WHERE date(timestamp/1000, 'unixepoch', 'localtime') = ?";
-
-        // Execute the query and fetch the result
-        SQLiteDatabase db = getReadableDatabase();
-        Cursor cursor = db.rawQuery(query, new String[]{formattedDate});
         if (cursor != null && cursor.moveToFirst()) {
-            int maxAccelerationIndex = cursor.getColumnIndex("max_acceleration");
-            if (maxAccelerationIndex >= 0 ) {
-                highestAcceleration = cursor.getDouble(maxAccelerationIndex);
-            }
+            highestAcceleration = cursor.getDouble(0);
             cursor.close();
         }
         db.close();
-
         return highestAcceleration;
     }
 
-    public double calculateAverageTotalAcceleration() {
+
+    // Get the average acceleration within a time range
+    public double getAverageAcceleration(long startTimestamp, long endTimestamp) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT AVG(" + COLUMN_TOTAL_ACCELERATION + ") FROM " + TABLE_NAME, null);
-        double average = 0;
-        if (cursor.moveToFirst()) {
-            average = cursor.getDouble(0);
+        String query = "SELECT AVG(acceleration) FROM trip WHERE timestamp BETWEEN ? AND ?";
+        String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp) };
+        Cursor cursor = db.rawQuery(query, args);
+        double averageAcceleration = 0.0;
+        if (cursor != null && cursor.moveToFirst()) {
+            averageAcceleration = cursor.getDouble(0);
+            cursor.close();
         }
-        cursor.close();
         db.close();
-        return average;
+        return averageAcceleration;
     }
 
-    public double calculateTimeSpentAboveLimit() {
+    // Get the time spent above a certain speed limit within a time range
+    public double getTimeSpentAboveLimit(long startTimestamp, long endTimestamp) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT SUM(CASE WHEN acceleration > 3.5 THEN timestamp - prev_timestamp ELSE 0 END) AS time_above_threshold" +
-                " FROM ( SELECT a1.timestamp, a1.acceleration, COALESCE(MAX(a2.timestamp), 0) AS prev_timestamp FROM acceleration_data a1" +
-                " LEFT JOIN acceleration_data a2 ON a1.timestamp > a2.timestamp" +
-                " GROUP BY a1.timestamp, a1.acceleration" +
-                " ) subquery", null);
-
-        // Process the cursor and retrieve the calculated time above threshold
-        double timeAboveThreshold = 0.0;
-        if (cursor.moveToFirst()) {
-            int columnIndex = cursor.getColumnIndex("time_above_threshold");
-            if (columnIndex >= 0) {
-                timeAboveThreshold = cursor.getDouble(columnIndex);
-            }
+        String query = "SELECT SUM(duration) FROM speed WHERE timestamp BETWEEN ? AND ? AND speed > ?";
+        String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp), String.valueOf(3.5) };
+        Cursor cursor = db.rawQuery(query, args);
+        double timeSpentAboveLimit = 0.0;
+        if (cursor != null && cursor.moveToFirst()) {
+            timeSpentAboveLimit = cursor.getDouble(0);
+            cursor.close();
         }
-
-        cursor.close();
         db.close();
-
-        return timeAboveThreshold;
+        return timeSpentAboveLimit;
     }
 
-    public String formatTimeSpentAboveLimit(double timeInMillis) {
-        long seconds = (long) (timeInMillis / 1000);
-        long minutes = seconds / 60;
-        long hours = minutes / 60;
-
-        // Calculate remaining minutes and seconds
-        minutes %= 60;
-        seconds %= 60;
-
-        // Format the time as "HH:mm:ss" and add labels
-        String formattedTime = String.format("%d hours, %d minutes, %d seconds", hours, minutes, seconds);
-
-        return formattedTime;
+    // Get the count of aggressive braking events within a time range
+    public int getAggressiveBrakingCount(long startTimestamp, long endTimestamp) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT COUNT(*) FROM event WHERE timestamp BETWEEN ? AND ? AND type = ?";
+        String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp), EventType.BRAKING.toString() };
+        Cursor cursor = db.rawQuery(query, args);
+        int aggressiveBrakingCount = 0;
+        if (cursor != null && cursor.moveToFirst()) {
+            aggressiveBrakingCount = cursor.getInt(0);
+            cursor.close();
+        }
+        db.close();
+        return aggressiveBrakingCount;
     }
 
-
-
-    /*public int countAccelerationBreaches() {
+    // Get the count of aggressive acceleration events within a time range
+    public int getAggressiveAccelerationCount(long startTimestamp, long endTimestamp) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT COUNT(*) AS breach_count" +
-                " FROM (" +
-                "   SELECT acceleration, LAG(acceleration) OVER (ORDER BY timestamp) AS prev_acceleration" +
-                "   FROM acceleration_data" +
-                " )" +
-                " WHERE acceleration > 3.5 AND prev_acceleration <= 3.5", null);
-
-        // Process the cursor and retrieve the breach count
-        int breachCount = 0;
-        if (cursor.moveToFirst()) {
-            int columnIndex = cursor.getColumnIndex("breach_count");
-            if (columnIndex >= 0) {
-                breachCount = cursor.getInt(columnIndex);
-            }
+        String query = "SELECT COUNT(*) FROM event WHERE timestamp BETWEEN ? AND ? AND type = ?";
+        String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp), EventType.ACCELERATION.toString() };
+        Cursor cursor = db.rawQuery(query, args);
+        int aggressiveAccelerationCount = 0;
+        if (cursor != null && cursor.moveToFirst()) {
+            aggressiveAccelerationCount = cursor.getInt(0);
+            cursor.close();
         }
-
-        cursor.close();
         db.close();
-
-        return breachCount;
-    }*/
-
-
-    public double calculateBiggestAccelerationDifference() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT MAX(ABS(acceleration - prev_acceleration)) AS max_difference" +
-                " FROM ( SELECT acceleration, LAG(acceleration) OVER (ORDER BY timestamp) AS prev_acceleration FROM acceleration_data" +
-                " ) subquery", null);
-
-        // Process the cursor and retrieve the maximum difference
-        double maxDifference = 0.0;
-        if (cursor.moveToFirst()) {
-            int columnIndex = cursor.getColumnIndex("max_difference");
-            if (columnIndex >= 0) {
-                maxDifference = cursor.getDouble(columnIndex);
-            }
-        }
-
-        cursor.close();
-        db.close();
-
-        return maxDifference;
+        return aggressiveAccelerationCount;
     }
 
 
-
-    public int getAggressiveBrakingCount() {
-        int count = 0;
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT acceleration FROM acceleration_data ORDER BY timestamp DESC", null);
-
-        float prevAcceleration = 0.0f;
-        boolean isDecelerationAgg = false; // Flag to track if aggressive deceleration is already counted
-
-        if (cursor.moveToFirst()) {
-            do {
-                float acceleration = cursor.getFloat(cursor.getColumnIndexOrThrow("acceleration"));
-                if (Math.abs(acceleration - prevAcceleration) > 2.943 && acceleration < prevAcceleration && !isDecelerationAgg) {
-                    count++;
-                    isDecelerationAgg = true; // Set the flag to true after counting aggressive deceleration
-                } else if (acceleration > prevAcceleration) {
-                    isDecelerationAgg = false; // Reset the flag if acceleration goes above previous value
-                }
-                prevAcceleration = acceleration;
-            } while (cursor.moveToNext());
-        }
-
-        cursor.close();
-        db.close();
-
-        return count;
-    }
-
-    public int getAggressiveAccelerationCount() {
-        int count = 0;
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT acceleration FROM acceleration_data ORDER BY timestamp DESC", null);
-
-        float prevAcceleration = 0.0f;
-        boolean isAccelerationAgg = false; // Flag to track if aggressive acceleration is already counted
-
-        if (cursor.moveToFirst()) {
-            do {
-                float acceleration = cursor.getFloat(cursor.getColumnIndexOrThrow("acceleration"));
-                if (Math.abs(acceleration - prevAcceleration) > 2.943 && acceleration > prevAcceleration && !isAccelerationAgg) {
-                    count++;
-                    isAccelerationAgg = true; // Set the flag to true after counting aggressive acceleration
-                } else if (acceleration < prevAcceleration) {
-                    isAccelerationAgg = false; // Reset the flag if acceleration goes below previous value
-                }
-                prevAcceleration = acceleration;
-            } while (cursor.moveToNext());
-        }
-
-        cursor.close();
-        db.close();
-
-        return count;
-    }
 
 
 }
