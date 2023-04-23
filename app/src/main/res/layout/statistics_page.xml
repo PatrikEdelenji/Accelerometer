@@ -78,7 +78,7 @@
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/numberOfAggressiveBreakingTextView"
+        android:id="@+id/numberOfAggressiveBrakingTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"

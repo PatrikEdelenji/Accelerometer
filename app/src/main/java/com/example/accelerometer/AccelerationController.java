@@ -65,14 +65,25 @@ public class AccelerationController extends AppCompatActivity implements SensorE
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-
             Log.d("Sensor Data", "X: " + event.values[0] + " Y: " + event.values[1] + " Z: " + event.values[2]);
 
             // Calculate acceleration
             float x = event.values[0];
             float y = event.values[1];
             float z = event.values[2];
-            float acceleration = (float) Math.sqrt(x * x + y * y + z * z) - 9.81f;
+
+            float acceleration = 0.0f;
+
+            // Check which axis is closest to the gravitational acceleration
+            float maxAcceleration = Math.max(Math.max(Math.abs(x), Math.abs(y)), Math.abs(z));
+
+            if (maxAcceleration == Math.abs(z)) {
+                // The Z axis is closest to the gravitational acceleration
+                acceleration = (float) Math.sqrt(x * x + y * y) - 9.81f;
+            } else {
+                // The Y axis is closest to the gravitational acceleration
+                acceleration = (float) Math.sqrt(x * x + z * z) - 9.81f;
+            }
 
             // Ignore acceleration values close to zero
             float accelerationThreshold = 0.1f; // Set your acceleration threshold here
@@ -83,8 +94,7 @@ public class AccelerationController extends AppCompatActivity implements SensorE
 
                 // Add acceleration data to the database
                 dbHelper.addAccelerationData(acceleration, x, y, z, timestamp);
-            }
-            else {
+            } else {
                 Log.d("Sensor readings too low!", "Acceleration: " + acceleration);
             }
         }

@@ -2,6 +2,7 @@ package com.example.accelerometer;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+
 import android.app.Dialog;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -9,14 +10,20 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.DatePicker;
+import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.app.DatePickerDialog;
 import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import android.widget.TextView;
+
 
 
 public class StatisticsPageView extends AppCompatActivity {
@@ -26,8 +33,9 @@ public class StatisticsPageView extends AppCompatActivity {
     private TextView biggestDifferenceTextView;
     private TextView averageTotalAccelerationTextView;
     private TextView timeAboveLimitTextView;
-    private TextView numberOfAggressiveBreakingTextView;
+    private TextView numberOfAggressiveBrakingTextView;
     private TextView numberOfAggressiveAccelerationTextView;
+    private static final String TAG = "YourClassTag";
 
     private float highestAcceleration;
     private float averageAcceleration;
@@ -35,11 +43,13 @@ public class StatisticsPageView extends AppCompatActivity {
     private int aggressiveBrakingCount;
     private int aggressiveAccelerationCount;
 
+    private RadioGroup mRadioGroup;
+    AccelerationDataDbHelper dbHelper = new AccelerationDataDbHelper(this);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.statistics_page);
-        AccelerationDataDbHelper dbHelper = new AccelerationDataDbHelper(this);
 
         Button sortButton = findViewById(R.id.sortButton);
         sortButton.setOnClickListener(new View.OnClickListener() {
@@ -49,7 +59,15 @@ public class StatisticsPageView extends AppCompatActivity {
             }
         });
 
-
+        long startTimestamp = 0;
+        long endTimestamp = 0;
+        // Set the default time range to today
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        startTimestamp = calendar.getTimeInMillis();
+        endTimestamp = System.currentTimeMillis();
 
         // Find each TextView by ID
         accelerationTextView = findViewById(R.id.accelerationTextView);
@@ -57,55 +75,43 @@ public class StatisticsPageView extends AppCompatActivity {
         biggestDifferenceTextView = findViewById(R.id.biggestDifferenceTextView);
         averageTotalAccelerationTextView = findViewById(R.id.averageTotalAccelerationTextView);
         timeAboveLimitTextView = findViewById(R.id.timeAboveLimitTextView);
-        numberOfAggressiveBreakingTextView = findViewById(R.id.numberOfAggressiveBreakingTextView);
+        numberOfAggressiveBrakingTextView = findViewById(R.id.numberOfAggressiveBrakingTextView);
         numberOfAggressiveAccelerationTextView = findViewById(R.id.numberOfAggressiveAccelerationTextView);
 
+        // Update the UI with the default time range
+        updateStatisticsUI(startTimestamp, endTimestamp);
 
-        // Set text and colors for each TextView based on the calculated statistics
-        highestAccelerationTextView.setText(String.format("%.2f m/s^2", highestAcceleration));
-        highestAccelerationTextView.setTextColor(highestAcceleration >= 3.5f ? Color.RED : Color.GREEN);
 
-        averageTotalAccelerationTextView.setText(String.format("%.2f m/s^2", averageAcceleration));
-        averageTotalAccelerationTextView.setTextColor(averageAcceleration >= 3.5f ? Color.RED : Color.GREEN);
 
-        timeAboveLimitTextView.setText(String.format("%d seconds", (int) timeSpentAboveLimit));
-        timeAboveLimitTextView.setTextColor(timeSpentAboveLimit == 0 ? Color.GREEN : Color.BLACK);
 
-        numberOfAggressiveBreakingTextView.setText(String.format("%d", aggressiveBrakingCount));
-        numberOfAggressiveBreakingTextView.setTextColor(Color.RED);
-
-        numberOfAggressiveAccelerationTextView.setText(String.format("%d", aggressiveAccelerationCount));
-        numberOfAggressiveAccelerationTextView.setTextColor(Color.RED);
     }
 
 
     private void showFilterDialog() {
-
         AccelerationDataDbHelper dbHelper = new AccelerationDataDbHelper(this);
 
         // Create a new dialog
         Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.statistics_page_menu);
+        dialog.show();
+
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+        lp.copyFrom(dialog.getWindow().getAttributes());
+        lp.width = WindowManager.LayoutParams.MATCH_PARENT;
+        lp.height = WindowManager.LayoutParams.MATCH_PARENT;
+        dialog.getWindow().setAttributes(lp);
 
 
-        // Find the filter button in the dialog and set its OnClickListener
-        Button filterButton = dialog.findViewById(R.id.sortButton);
-        filterButton.setOnClickListener(new View.OnClickListener() {
+        // Set up the confirm button
+        Button confirmButton = dialog.findViewById(R.id.confirmButton);
+        confirmButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Handle filter button click here
                 // Get the selected time range from the radio buttons
-                RadioGroup timeRangeRadioGroup = dialog.findViewById(R.id.statistics_page_button);
+                RadioGroup timeRangeRadioGroup = dialog.findViewById(R.id.radioGroup);
                 int selectedRadioButtonId = timeRangeRadioGroup.getCheckedRadioButtonId();
-                String timeRange = "";
                 long startTimestamp = 0;
                 long endTimestamp = 0;
-                double highestAcceleration = 0;
-                double averageAcceleration = 0;
-                double timeSpentAboveLimit = 0;
-                int aggressiveBrakingCount = 0;
-                int aggressiveAccelerationCount = 0;
-
                 if (selectedRadioButtonId == R.id.todaysValues) {
                     // Get data for today
                     Calendar calendar = Calendar.getInstance();
@@ -114,44 +120,22 @@ public class StatisticsPageView extends AppCompatActivity {
                     calendar.set(Calendar.SECOND, 0);
                     startTimestamp = calendar.getTimeInMillis();
                     endTimestamp = System.currentTimeMillis();
-                    timeRange = "Today";
-                    highestAcceleration = dbHelper.getHighestAcceleration(startTimestamp, endTimestamp);
-                    averageAcceleration = dbHelper.getAverageAcceleration(startTimestamp, endTimestamp);
-                    timeSpentAboveLimit = dbHelper.getTimeSpentAboveLimit(startTimestamp, endTimestamp);
-                    aggressiveBrakingCount = dbHelper.getAggressiveBrakingCount(startTimestamp, endTimestamp);
-                    aggressiveAccelerationCount = dbHelper.getAggressiveAccelerationCount(startTimestamp, endTimestamp);
-
+                    Log.d(TAG, "**********************************SELECTED TODAYS VALUE**********************************");
                 } else if (selectedRadioButtonId == R.id.values24hAgo) {
                     // Get data from the past 24 hours
                     startTimestamp = System.currentTimeMillis() - 86400000L; // 86400000 ms = 24 hours
                     endTimestamp = System.currentTimeMillis();
-                    timeRange = "Last 24 Hours";
-                    highestAcceleration = dbHelper.getHighestAcceleration(startTimestamp, endTimestamp);
-                    averageAcceleration = dbHelper.getAverageAcceleration(startTimestamp, endTimestamp);
-                    timeSpentAboveLimit = dbHelper.getTimeSpentAboveLimit(startTimestamp, endTimestamp);
-                    aggressiveBrakingCount = dbHelper.getAggressiveBrakingCount(startTimestamp, endTimestamp);
-                    aggressiveAccelerationCount = dbHelper.getAggressiveAccelerationCount(startTimestamp, endTimestamp);
-
+                    Log.d(TAG, "**********************************SELECTED 24 VALUE**********************************");
                 } else if (selectedRadioButtonId == R.id.lastWeekValues) {
                     // Get data from the past 7 days
                     startTimestamp = System.currentTimeMillis() - 604800000L; // 604800000 ms = 7 days
                     endTimestamp = System.currentTimeMillis();
-                    timeRange = "Last 7 Days";
-                    highestAcceleration = dbHelper.getHighestAcceleration(startTimestamp, endTimestamp);
-                    averageAcceleration = dbHelper.getAverageAcceleration(startTimestamp, endTimestamp);
-                    timeSpentAboveLimit = dbHelper.getTimeSpentAboveLimit(startTimestamp, endTimestamp);
-                    aggressiveBrakingCount = dbHelper.getAggressiveBrakingCount(startTimestamp, endTimestamp);
-                    aggressiveAccelerationCount = dbHelper.getAggressiveAccelerationCount(startTimestamp, endTimestamp);
+                    Log.d(TAG, "**********************************SELECTED 7DAYS VALUE**********************************");
                 } else if (selectedRadioButtonId == R.id.lastMonthValues) {
                     // Get data from the past 30 days
                     startTimestamp = System.currentTimeMillis() - 2592000000L; // 2592000000 ms = 30 days
                     endTimestamp = System.currentTimeMillis();
-                    timeRange = "Last 30 Days";
-                    highestAcceleration = dbHelper.getHighestAcceleration(startTimestamp, endTimestamp);
-                    averageAcceleration = dbHelper.getAverageAcceleration(startTimestamp, endTimestamp);
-                    timeSpentAboveLimit = dbHelper.getTimeSpentAboveLimit(startTimestamp, endTimestamp);
-                    aggressiveBrakingCount = dbHelper.getAggressiveBrakingCount(startTimestamp, endTimestamp);
-                    aggressiveAccelerationCount = dbHelper.getAggressiveAccelerationCount(startTimestamp, endTimestamp);
+                    Log.d(TAG, "**********************************SELECTED LASTMONTH VALUE**********************************");
                 } else if (selectedRadioButtonId == R.id.customValues) {
                     // Get data for the custom time range selected on the calendar
                     Calendar startCalendar = Calendar.getInstance();
@@ -169,15 +153,46 @@ public class StatisticsPageView extends AppCompatActivity {
                     endCalendar.set(Calendar.MINUTE, 59);
                     endCalendar.set(Calendar.SECOND, 59);
                     endTimestamp = endCalendar.getTimeInMillis();
+                    Log.d(TAG, "**********************************SELECTED CALENDAR VALUE**********************************");
+                }
 
-                    timeRange = "Custom Range";
-                    highestAcceleration = dbHelper.getHighestAcceleration(startTimestamp, endTimestamp);
-                    averageAcceleration = dbHelper.getAverageAcceleration(startTimestamp, endTimestamp);
-                    timeSpentAboveLimit = dbHelper.getTimeSpentAboveLimit(startTimestamp, endTimestamp);
-                    aggressiveBrakingCount = dbHelper.getAggressiveBrakingCount(startTimestamp, endTimestamp);
-                    aggressiveAccelerationCount = dbHelper.getAggressiveAccelerationCount(startTimestamp, endTimestamp);
-                }
-                }
-            });
-        }
+                // Update the statistics UI with the selected time range
+                updateStatisticsUI(startTimestamp, endTimestamp);
+
+                // Dismiss the dialog
+                dialog.dismiss();
+            }
+        });
     }
+
+    private void updateStatisticsUI(long startTimestamp, long endTimestamp) {
+        // Update the UI with the new data
+
+        double highestAcceleration = dbHelper.getHighestAcceleration(startTimestamp, endTimestamp);
+        double averageAcceleration = dbHelper.getAverageAcceleration(startTimestamp, endTimestamp);
+        double timeSpentAboveLimit = dbHelper.getTimeSpentAboveLimit(startTimestamp, endTimestamp);
+        int aggressiveBrakingCount = dbHelper.getAggressiveBrakingCount(startTimestamp, endTimestamp);
+        int aggressiveAccelerationCount = dbHelper.getAggressiveAccelerationCount(startTimestamp, endTimestamp);
+        // Set text and colors for each TextView based on the calculated statistics
+        highestAccelerationTextView.setText("Najveće zabilježeno ubrzavanje: " + highestAcceleration + "m/s^2");
+        highestAccelerationTextView.setTextColor(highestAcceleration >= 3.5f ? Color.RED : Color.GREEN);
+
+        averageTotalAccelerationTextView.setText("Prosječno zabilježeno ubrzavanje: " + averageAcceleration + "m/s^2");
+        averageTotalAccelerationTextView.setTextColor(averageAcceleration >= 3.5f ? Color.RED : Color.GREEN);
+
+        long timeSpentAboveLimitInSeconds = (long) timeSpentAboveLimit / 1000;
+        long hours = TimeUnit.SECONDS.toHours(timeSpentAboveLimitInSeconds);
+        long minutes = TimeUnit.SECONDS.toMinutes(timeSpentAboveLimitInSeconds - TimeUnit.HOURS.toSeconds(hours));
+        long seconds = timeSpentAboveLimitInSeconds - TimeUnit.HOURS.toSeconds(hours) - TimeUnit.MINUTES.toSeconds(minutes);
+        
+        String timeAboveLimitString = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        timeAboveLimitTextView.setText("Vrijeme provedeno iznad limita: " + timeAboveLimitString);
+
+        numberOfAggressiveBrakingTextView.setText("Broj naglih kočenja: " + aggressiveBrakingCount);
+        numberOfAggressiveBrakingTextView.setTextColor(Color.RED);
+
+        numberOfAggressiveAccelerationTextView.setText("Broj agresivnih ubrzavajna: " + aggressiveAccelerationCount);
+        numberOfAggressiveAccelerationTextView.setTextColor(Color.RED);
+    }
+
+}

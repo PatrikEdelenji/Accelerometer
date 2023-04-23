@@ -83,7 +83,7 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
     // Get the highest acceleration within a time range
     public double getHighestAcceleration(long startTimestamp, long endTimestamp) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT MAX(acceleration) FROM trip WHERE timestamp BETWEEN ? AND ?";
+        String query = "SELECT MAX(acceleration) FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ?";
         String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp) };
         Cursor cursor = db.rawQuery(query, args);
         double highestAcceleration = 0.0;
@@ -99,7 +99,7 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
     // Get the average acceleration within a time range
     public double getAverageAcceleration(long startTimestamp, long endTimestamp) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT AVG(acceleration) FROM trip WHERE timestamp BETWEEN ? AND ?";
+        String query = "SELECT AVG(acceleration) FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ?";
         String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp) };
         Cursor cursor = db.rawQuery(query, args);
         double averageAcceleration = 0.0;
@@ -114,8 +114,11 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
     // Get the time spent above a certain speed limit within a time range
     public double getTimeSpentAboveLimit(long startTimestamp, long endTimestamp) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT SUM(duration) FROM speed WHERE timestamp BETWEEN ? AND ? AND speed > ?";
-        String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp), String.valueOf(3.5) };
+        String query = "SELECT SUM((timestamp - prev_timestamp) / 1000.0) " +
+                "FROM (SELECT timestamp, LAG(timestamp) OVER (ORDER BY timestamp) AS prev_timestamp " +
+                "FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ? AND acceleration > 3.5) " +
+                "WHERE prev_timestamp IS NOT NULL";
+        String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp) };
         Cursor cursor = db.rawQuery(query, args);
         double timeSpentAboveLimit = 0.0;
         if (cursor != null && cursor.moveToFirst()) {
@@ -127,37 +130,74 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
     }
 
     // Get the count of aggressive braking events within a time range
-    public int getAggressiveBrakingCount(long startTimestamp, long endTimestamp) {
+    public int getAggressiveAccelerationCount(long startTimestamp, long endTimestamp) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT COUNT(*) FROM event WHERE timestamp BETWEEN ? AND ? AND type = ?";
-        String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp), EventType.BRAKING.toString() };
+
+        // Query to get all acceleration values below -3.5 within the time range
+        String query = "SELECT acceleration FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ? AND acceleration";
+
+        // Execute the query
+        String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp) };
         Cursor cursor = db.rawQuery(query, args);
-        int aggressiveBrakingCount = 0;
+
+        // Count the number of times the acceleration value goes below -3.5
+        int aggressiveAccelerationCount = 0;
+        boolean wasAboveThreshold = false;
         if (cursor != null && cursor.moveToFirst()) {
-            aggressiveBrakingCount = cursor.getInt(0);
+            do {
+                double acceleration = cursor.getDouble(0);
+                if (!wasAboveThreshold && acceleration >= 3.5) {
+                    // The acceleration value has just gone above 3.5, so increment the count
+                    aggressiveAccelerationCount++;
+                    wasAboveThreshold = true;
+                } else if (wasAboveThreshold && acceleration < 3.5) {
+                    // The acceleration value has just gone above -3.5 after being below it, so reset the flag
+                    wasAboveThreshold = false;
+                }
+            } while (cursor.moveToNext());
+
             cursor.close();
         }
+
         db.close();
-        return aggressiveBrakingCount;
+        return aggressiveAccelerationCount;
     }
 
     // Get the count of aggressive acceleration events within a time range
-    public int getAggressiveAccelerationCount(long startTimestamp, long endTimestamp) {
+    public int getAggressiveBrakingCount(long startTimestamp, long endTimestamp) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT COUNT(*) FROM event WHERE timestamp BETWEEN ? AND ? AND type = ?";
-        String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp), EventType.ACCELERATION.toString() };
+
+        // Query to get all acceleration values below -3.5 within the time range
+        String query = "SELECT acceleration FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ?";
+
+        // Execute the query
+        String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp) };
         Cursor cursor = db.rawQuery(query, args);
-        int aggressiveAccelerationCount = 0;
+
+        // Count the number of times the acceleration value goes below -3.5
+        int aggressiveBrakingCount = 0;
+        boolean wasBelowThreshold = false;
         if (cursor != null && cursor.moveToFirst()) {
-            aggressiveAccelerationCount = cursor.getInt(0);
+            do {
+                double acceleration = cursor.getDouble(0);
+                if (!wasBelowThreshold && acceleration < -3.5) {
+                    // The deceleration value has just gone below -3.5, so increment the count
+                    aggressiveBrakingCount++;
+                    wasBelowThreshold = true;
+                } else if (wasBelowThreshold && acceleration >= -3.5) {
+                    // The deceleration value has just gone above -3.5 after being below it, so reset the flag
+                    wasBelowThreshold = false;
+                }
+            } while (cursor.moveToNext());
+
             cursor.close();
         }
+
         db.close();
-        return aggressiveAccelerationCount;
+        return aggressiveBrakingCount;
     }
 
 
 
 
 }
-

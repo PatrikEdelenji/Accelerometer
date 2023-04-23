@@ -29,8 +29,8 @@ public class AccelerationView extends View {
     private float centerX;
     private float centerY;
     private float radius;
-    private float maxValue = 10f;
-    private float minValue = 0f;
+    private float maxValue = 5f;
+    private float minValue = -5f;
     private float startAngle = -90f;
     private float endAngle = 90f;
     private float numDivisions = 10;
@@ -127,13 +127,7 @@ public class AccelerationView extends View {
         // Calculate the angle of the needle based on the acceleration value
         float angle = Math.max(startAngle, Math.min(endAngle, (endAngle - startAngle) * (accelerationValue - minValue) / (maxValue - minValue) + startAngle));
 
-        /*
-        Limit the angle of the needle to be within the gauge arc
-        float gaugeArc = endAngle - startAngle;
-        float halfGaugeArc = gaugeArc / 2f;
-        */
-
-        float lowerLimit = startAngle;
+         float lowerLimit = startAngle;
         float upperLimit = endAngle;
         angle = Math.max(lowerLimit, Math.min(upperLimit, angle));
 
@@ -152,10 +146,10 @@ public class AccelerationView extends View {
 
         // Update the gauge color based on the acceleration value
         int gaugeColor, needleColor;
-        if (accelerationValue < 2.0) {
+        if (accelerationValue < 2.0 && accelerationValue > -2.0) {
             needleColor = ColorUtils.blendARGB(Color.GREEN, Color.BLACK, 0.1f); // Set needle color to a darker shade of green for acceleration < 2.0
             gaugeColor = ColorUtils.blendARGB(Color.GREEN, Color.BLACK, 0.1f); // Set gauge color to a darker shade of green for acceleration < 2.0
-        } else if (accelerationValue < 2.943) {
+        } else if (accelerationValue < 2.943 && accelerationValue > -2.943) {
             needleColor = ColorUtils.blendARGB(Color.YELLOW, Color.BLACK, 0.1f); // Set needle color to a darker shade of yellow for acceleration between 2.0 and 6.0
             gaugeColor = Color.YELLOW; // Set gauge color to yellow for acceleration between 2.0 and 6.0
         } else {
