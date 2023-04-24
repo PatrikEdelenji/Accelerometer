@@ -4,25 +4,23 @@ import androidx.appcompat.app.AppCompatActivity;
 
 
 import android.app.Dialog;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.DatePicker;
-import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
-import android.app.DatePickerDialog;
+import android.widget.TimePicker;
+
 import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import android.widget.TextView;
 
 
 
@@ -36,20 +34,22 @@ public class StatisticsPageView extends AppCompatActivity {
     private TextView numberOfAggressiveBrakingTextView;
     private TextView numberOfAggressiveAccelerationTextView;
     private static final String TAG = "YourClassTag";
+    private long startTimestamp = 0;
+    private long endTimestamp = 0;
 
-    private float highestAcceleration;
-    private float averageAcceleration;
-    private float timeSpentAboveLimit;
-    private int aggressiveBrakingCount;
-    private int aggressiveAccelerationCount;
+    private int lastSelectedRadioButtonId = 0;
+    private Calendar startPickerLastSelectedDate = null;
+    private Calendar endPickerLastSelectedDate = null;
 
-    private RadioGroup mRadioGroup;
+
     AccelerationDataDbHelper dbHelper = new AccelerationDataDbHelper(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.statistics_page);
+
+
 
         Button sortButton = findViewById(R.id.sortButton);
         sortButton.setOnClickListener(new View.OnClickListener() {
@@ -59,8 +59,7 @@ public class StatisticsPageView extends AppCompatActivity {
             }
         });
 
-        long startTimestamp = 0;
-        long endTimestamp = 0;
+
         // Set the default time range to today
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -86,6 +85,37 @@ public class StatisticsPageView extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Retrieve the last selected radio button id from SharedPreferences and select it
+        SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+        lastSelectedRadioButtonId = sharedPreferences.getInt("lastSelectedRadioButtonId", -1);
+        if (lastSelectedRadioButtonId != -1) {
+            RadioButton lastSelectedRadioButton = findViewById(lastSelectedRadioButtonId);
+            if (lastSelectedRadioButton != null) {
+                lastSelectedRadioButton.setChecked(true);
+            }
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Save the last selected radio button id to SharedPreferences
+        SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("lastSelectedRadioButtonId", lastSelectedRadioButtonId);
+        editor.apply();
+    }
+
+
+
+
+
+
+
+
 
     private void showFilterDialog() {
         AccelerationDataDbHelper dbHelper = new AccelerationDataDbHelper(this);
@@ -93,6 +123,13 @@ public class StatisticsPageView extends AppCompatActivity {
         // Create a new dialog
         Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.statistics_page_menu);
+
+        // Set the checked state of the radio button based on the last selected ID
+        RadioButton lastSelectedRadioButton = dialog.findViewById(lastSelectedRadioButtonId);
+        if (lastSelectedRadioButton != null) {
+            lastSelectedRadioButton.setChecked(true);
+        }
+
         dialog.show();
 
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
@@ -110,6 +147,7 @@ public class StatisticsPageView extends AppCompatActivity {
                 // Get the selected time range from the radio buttons
                 RadioGroup timeRangeRadioGroup = dialog.findViewById(R.id.radioGroup);
                 int selectedRadioButtonId = timeRangeRadioGroup.getCheckedRadioButtonId();
+                lastSelectedRadioButtonId = selectedRadioButtonId;
                 long startTimestamp = 0;
                 long endTimestamp = 0;
                 if (selectedRadioButtonId == R.id.todaysValues) {
@@ -137,24 +175,36 @@ public class StatisticsPageView extends AppCompatActivity {
                     endTimestamp = System.currentTimeMillis();
                     Log.d(TAG, "**********************************SELECTED LASTMONTH VALUE**********************************");
                 } else if (selectedRadioButtonId == R.id.customValues) {
-                    // Get data for the custom time range selected on the calendar
                     Calendar startCalendar = Calendar.getInstance();
                     DatePicker startDatePicker = dialog.findViewById(R.id.fromDatePicker);
-                    startCalendar.set(startDatePicker.getYear(), startDatePicker.getMonth(), startDatePicker.getDayOfMonth());
-                    startCalendar.set(Calendar.HOUR_OF_DAY, 0);
-                    startCalendar.set(Calendar.MINUTE, 0);
-                    startCalendar.set(Calendar.SECOND, 0);
+                    startCalendar.set(startDatePicker.getYear(), startDatePicker.getMonth(), startDatePicker.getDayOfMonth(), 0, 0, 0);
+                    startCalendar.set(Calendar.MILLISECOND, 0);
                     startTimestamp = startCalendar.getTimeInMillis();
 
                     Calendar endCalendar = Calendar.getInstance();
                     DatePicker endDatePicker = dialog.findViewById(R.id.toDatePicker);
-                    endCalendar.set(endDatePicker.getYear(), endDatePicker.getMonth(), endDatePicker.getDayOfMonth());
-                    endCalendar.set(Calendar.HOUR_OF_DAY, 23);
-                    endCalendar.set(Calendar.MINUTE, 59);
-                    endCalendar.set(Calendar.SECOND, 59);
+                    endCalendar.set(endDatePicker.getYear(), endDatePicker.getMonth(), endDatePicker.getDayOfMonth(), 23, 59, 59);
+                    endCalendar.set(Calendar.MILLISECOND, 999);
                     endTimestamp = endCalendar.getTimeInMillis();
-                    Log.d(TAG, "**********************************SELECTED CALENDAR VALUE**********************************");
+                    Log.d(TAG, "Selected custom date range: " + startCalendar.getTime() + " to " + endCalendar.getTime());
+
+                    startPickerLastSelectedDate = startCalendar;
+                    endPickerLastSelectedDate = endCalendar;
+
+                    Log.d(TAG, "Selected custom date range: " + startCalendar.getTime() + " to " + endCalendar.getTime());
                 }
+
+
+
+
+
+                // Save the last selected radio button ID to SharedPreferences
+                SharedPreferences preferences = getSharedPreferences("MyPreferences", MODE_PRIVATE);
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putInt("lastSelectedRadioButtonId", lastSelectedRadioButtonId);
+                editor.putLong("startPickerLastSelectedDate", startPickerLastSelectedDate.getTimeInMillis());
+                editor.putLong("endPickerLastSelectedDate", endPickerLastSelectedDate.getTimeInMillis());
+                editor.apply();
 
                 // Update the statistics UI with the selected time range
                 updateStatisticsUI(startTimestamp, endTimestamp);
