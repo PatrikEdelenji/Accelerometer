@@ -202,8 +202,12 @@ public class StatisticsPageView extends AppCompatActivity {
                 SharedPreferences preferences = getSharedPreferences("MyPreferences", MODE_PRIVATE);
                 SharedPreferences.Editor editor = preferences.edit();
                 editor.putInt("lastSelectedRadioButtonId", lastSelectedRadioButtonId);
-                editor.putLong("startPickerLastSelectedDate", startPickerLastSelectedDate.getTimeInMillis());
-                editor.putLong("endPickerLastSelectedDate", endPickerLastSelectedDate.getTimeInMillis());
+                if (startPickerLastSelectedDate != null) {
+                    editor.putLong("startPickerLastSelectedDate", startPickerLastSelectedDate.getTimeInMillis());
+                }
+                if (endPickerLastSelectedDate != null) {
+                    editor.putLong("endPickerLastSelectedDate", endPickerLastSelectedDate.getTimeInMillis());
+                }
                 editor.apply();
 
                 // Update the statistics UI with the selected time range
@@ -234,7 +238,7 @@ public class StatisticsPageView extends AppCompatActivity {
         long hours = TimeUnit.SECONDS.toHours(timeSpentAboveLimitInSeconds);
         long minutes = TimeUnit.SECONDS.toMinutes(timeSpentAboveLimitInSeconds - TimeUnit.HOURS.toSeconds(hours));
         long seconds = timeSpentAboveLimitInSeconds - TimeUnit.HOURS.toSeconds(hours) - TimeUnit.MINUTES.toSeconds(minutes);
-        
+
         String timeAboveLimitString = String.format("%02d:%02d:%02d", hours, minutes, seconds);
         timeAboveLimitTextView.setText("Vrijeme provedeno iznad limita: " + timeAboveLimitString);
 
