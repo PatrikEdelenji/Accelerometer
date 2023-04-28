@@ -60,13 +60,6 @@ public class StatisticsPageView extends AppCompatActivity {
         });
 
 
-        // Set the default time range to today
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        startTimestamp = calendar.getTimeInMillis();
-        endTimestamp = System.currentTimeMillis();
 
         // Find each TextView by ID
         accelerationTextView = findViewById(R.id.accelerationTextView);
@@ -128,6 +121,27 @@ public class StatisticsPageView extends AppCompatActivity {
         RadioButton lastSelectedRadioButton = dialog.findViewById(lastSelectedRadioButtonId);
         if (lastSelectedRadioButton != null) {
             lastSelectedRadioButton.setChecked(true);
+        }
+
+        // Load the last selected dates from SharedPreferences
+        SharedPreferences preferences = getSharedPreferences("MyPreferences", MODE_PRIVATE);
+        long startPickerLastSelectedDateMillis = preferences.getLong("startPickerLastSelectedDate", -1);
+        long endPickerLastSelectedDateMillis = preferences.getLong("endPickerLastSelectedDate", -1);
+
+
+        // Set the default values for the date pickers if last selected dates are available
+        if (startPickerLastSelectedDateMillis != -1) {
+            Calendar startCalendar = Calendar.getInstance();
+            startCalendar.setTimeInMillis(startPickerLastSelectedDateMillis);
+            DatePicker startDatePicker = dialog.findViewById(R.id.fromDatePicker);
+            startDatePicker.init(startCalendar.get(Calendar.YEAR), startCalendar.get(Calendar.MONTH), startCalendar.get(Calendar.DAY_OF_MONTH), null);
+        }
+
+        if (endPickerLastSelectedDateMillis != -1) {
+            Calendar endCalendar = Calendar.getInstance();
+            endCalendar.setTimeInMillis(endPickerLastSelectedDateMillis);
+            DatePicker endDatePicker = dialog.findViewById(R.id.toDatePicker);
+            endDatePicker.init(endCalendar.get(Calendar.YEAR), endCalendar.get(Calendar.MONTH), endCalendar.get(Calendar.DAY_OF_MONTH), null);
         }
 
         dialog.show();
