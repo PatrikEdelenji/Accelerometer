@@ -129,6 +129,13 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
         return timeSpentAboveLimit;
     }
 
+    // Get the percentage of time spent above a certain acceleration threshold within a time range
+    public double getPercentageAboveThreshold(long startTimestamp, long endTimestamp) {
+        double timeAboveThreshold = getTimeSpentAboveLimit(startTimestamp, endTimestamp);
+        double totalTime = (endTimestamp - startTimestamp) / 1000.0;
+        return (timeAboveThreshold / totalTime) * 100.0;
+    }
+
     // Get the count of aggressive braking events within a time range
     public int getAggressiveAccelerationCount(long startTimestamp, long endTimestamp) {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -195,6 +202,90 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
 
         db.close();
         return aggressiveBrakingCount;
+    }
+
+
+
+    public int getAggressiveLeftTurnCount(long startTimestamp, long endTimestamp) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Query to get all x, y, and z acceleration values within the time range
+        String query = "SELECT acceleration, x, y, z FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ?";
+
+        // Execute the query
+        String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp) };
+        Cursor cursor = db.rawQuery(query, args);
+
+        // Count the number of times a sharp left turn is detected
+        int aggressiveLeftTurnCount = 0;
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                double totalAcceleration = cursor.getDouble(0);
+                double xAcceleration = cursor.getDouble(1);
+                double yAcceleration = cursor.getDouble(2);
+
+
+                // Set a threshold for detecting a sharp turn
+                double threshold = 8.0;
+
+                // Check if the magnitude exceeds the threshold
+                if (totalAcceleration > threshold) {
+                    // Calculate the dot product of the acceleration vector and the device's orientation vector
+                    double dotProduct = xAcceleration * Math.cos(Math.toRadians(90)) + yAcceleration * Math.sin(Math.toRadians(90));
+
+                    // Determine if the turn is a sharp left turn based on the sign of the dot product
+                    if (dotProduct < 0) {
+                        aggressiveLeftTurnCount++;
+                    }
+                }
+            } while (cursor.moveToNext());
+
+            cursor.close();
+        }
+
+        db.close();
+        return aggressiveLeftTurnCount;
+    }
+
+    public int getAggressiveRightTurnCount(long startTimestamp, long endTimestamp) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Query to get all x, y, and z acceleration values within the time range
+        String query = "SELECT acceleration, x, y, z FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ?";
+
+        // Execute the query
+        String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp) };
+        Cursor cursor = db.rawQuery(query, args);
+
+        // Count the number of times a sharp right turn is detected
+        int aggressiveRightTurnCount = 0;
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                double totalAcceleration = cursor.getDouble(0);
+                double xAcceleration = cursor.getDouble(1);
+                double yAcceleration = cursor.getDouble(2);
+
+
+                // Set a threshold for detecting a sharp turn
+                double threshold = 8.0;
+
+                // Check if the magnitude exceeds the threshold
+                if (totalAcceleration > threshold) {
+                    // Calculate the dot product of the acceleration vector and the device's orientation vector
+                    double dotProduct = xAcceleration * Math.cos(Math.toRadians(90)) + yAcceleration * Math.sin(Math.toRadians(90));
+
+                    // Determine if the turn is a sharp right turn based on the sign of the dot product
+                    if (dotProduct > 0) {
+                        aggressiveRightTurnCount++;
+                    }
+                }
+            } while (cursor.moveToNext());
+
+            cursor.close();
+        }
+
+        db.close();
+        return aggressiveRightTurnCount;
     }
 
 
