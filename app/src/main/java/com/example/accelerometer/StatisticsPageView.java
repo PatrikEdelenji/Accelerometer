@@ -18,6 +18,7 @@ import android.widget.TextView;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
+
 public class StatisticsPageView extends AppCompatActivity {
 
     private TextView accelerationTextView;
@@ -26,7 +27,7 @@ public class StatisticsPageView extends AppCompatActivity {
     private TextView timeAboveLimitTextView;
     private TextView numberOfAggressiveBrakingTextView;
     private TextView numberOfAggressiveAccelerationTextView;
-    private static final String TAG = "YourClassTag";
+    private TextView typeOfDriverTextView;
     private long startTimestamp = 0;
     private long endTimestamp = 0;
 
@@ -61,7 +62,7 @@ public class StatisticsPageView extends AppCompatActivity {
         timeAboveLimitTextView = findViewById(R.id.timeAboveLimitTextView);
         numberOfAggressiveBrakingTextView = findViewById(R.id.numberOfAggressiveBrakingTextView);
         numberOfAggressiveAccelerationTextView = findViewById(R.id.numberOfAggressiveAccelerationTextView);
-
+        typeOfDriverTextView = findViewById(R.id.typeOfDriver);
         // Update the UI with the default time range
         updateStatisticsUI(startTimestamp, endTimestamp);
 
@@ -200,22 +201,6 @@ public class StatisticsPageView extends AppCompatActivity {
 
                 }
 
-                // Save the last selected radio button ID to SharedPreferences
-//                SharedPreferences preferences = getSharedPreferences("MyPreferences", MODE_PRIVATE);
-//                SharedPreferences.Editor editor = preferences.edit();
-//                editor.putInt("lastSelectedRadioButtonId", lastSelectedRadioButtonId);
-//                if (startPickerLastSelectedDate != null) {
-//                    editor.putLong("startPickerLastSelectedDate", startPickerLastSelectedDate.getTimeInMillis());
-//                }
-//                if (endPickerLastSelectedDate != null) {
-//                    editor.putLong("endPickerLastSelectedDate", endPickerLastSelectedDate.getTimeInMillis());
-//                }
-//                if(lastSelectedStartTimestamp != 0 && lastSelectedEndTimestamp != 0) {
-//                    editor.putLong("lastSelectedStartTimestamp", lastSelectedStartTimestamp);
-//                    editor.putLong("lastSelectedEndTimestamp", lastSelectedEndTimestamp);
-//                }
-//
-//                editor.apply();
 
                 // Update the statistics UI with the selected time range
                 updateStatisticsUI(startTimestamp, endTimestamp);
@@ -235,6 +220,12 @@ public class StatisticsPageView extends AppCompatActivity {
         double percentageTimeAboveLimit = dbHelper.getPercentageAboveThreshold(startTimestamp, endTimestamp);
         int aggressiveBrakingCount = dbHelper.getAggressiveBrakingCount(startTimestamp, endTimestamp);
         int aggressiveAccelerationCount = dbHelper.getAggressiveAccelerationCount(startTimestamp, endTimestamp);
+
+        String totalScore = PointCalculatorController.calculateScore(highestAcceleration, averageAcceleration, timeSpentAboveLimit, percentageTimeAboveLimit, aggressiveAccelerationCount, aggressiveBrakingCount, startTimestamp, endTimestamp);
+
+
+
+
         // Set text and colors for each TextView based on the calculated statistics
         highestAccelerationTextView.setText("Najveće zabilježeno ubrzavanje: " + highestAcceleration + "m/s^2");
         highestAccelerationTextView.setTextColor(highestAcceleration >= 3.5f ? Color.RED : Color.GREEN);
@@ -257,6 +248,8 @@ public class StatisticsPageView extends AppCompatActivity {
 
         numberOfAggressiveAccelerationTextView.setText("Broj agresivnih ubrzavajna: " + aggressiveAccelerationCount);
         numberOfAggressiveAccelerationTextView.setTextColor(Color.RED);
+
+        typeOfDriverTextView.setText("Vi ste: " + totalScore);
     }
 
 }
