@@ -25,8 +25,8 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
     public static final String COLUMN_Y_ACCELERATION = "y";
     public static final String COLUMN_Z_ACCELERATION = "z";
     public static final String COLUMN_TIMESTAMP = "timestamp";
-    private long startTimestamp = 0;
-    private long endTimestamp = 0;
+    public static long startTimestamp = 0;
+    public static long endTimestamp = 0;
 
     public AccelerationDataDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);

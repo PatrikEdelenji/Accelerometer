@@ -74,18 +74,14 @@ public class StatisticsPageView extends AppCompatActivity {
             dbHelper.getTimestamps(lastSelection);
             updateStatisticsUI();
             if (lastSelectedRadioButton != null) {
-
                 lastSelectedRadioButton.setChecked(true);
-
             }
         }else if(lastSelectedRadioButtonId != 1 && lastSelection == 5){
             RadioButton lastSelectedRadioButton = findViewById(lastSelectedRadioButtonId);
             dbHelper.getTimestamps(startPickerLastSelectedDate, endPickerLastSelectedDate);
             updateStatisticsUI();
             if (lastSelectedRadioButton != null) {
-
                 lastSelectedRadioButton.setChecked(true);
-
             }
         }
 
@@ -244,7 +240,8 @@ public class StatisticsPageView extends AppCompatActivity {
         int aggressiveBrakingCount = dbHelper.getAggressiveBrakingCount();
         int aggressiveAccelerationCount = dbHelper.getAggressiveAccelerationCount();
 
-        String totalScore = PointCalculatorController.calculateScore(highestAcceleration, averageAcceleration, timeSpentAboveLimit, percentageTimeAboveLimit, aggressiveAccelerationCount, aggressiveBrakingCount, startTimestamp, endTimestamp);
+        String totalScore = PointCalculatorController.calculateScore(highestAcceleration, averageAcceleration, timeSpentAboveLimit, percentageTimeAboveLimit, aggressiveAccelerationCount, aggressiveBrakingCount);
+        Log.i("IDK", "Timestamps for calculating totalScore = " + startTimestamp + " " + endTimestamp);
         // Set text and colors for each TextView based on the calculated statistics
         highestAccelerationTextView.setText("Najveće zabilježeno ubrzavanje: " + highestAcceleration + "m/s^2");
         highestAccelerationTextView.setTextColor(highestAcceleration >= 3.5f ? Color.RED : Color.GREEN);

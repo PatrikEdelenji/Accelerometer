@@ -4,13 +4,13 @@ import android.util.Log;
 
 public class PointCalculatorController extends StatisticsPageView {
 
-    public static String calculateScore(double highestAcceleration, double averageAcceleration, double timeSpentAboveLimit, double percentageTimeAboveLimit, int aggresiveAccelerationCount, int aggresiveBrakingCount, long startTimestamp, long endTimestamp) {
+    public static String calculateScore(double highestAcceleration, double averageAcceleration, double timeSpentAboveLimit, double percentageTimeAboveLimit, int aggresiveAccelerationCount, int aggresiveBrakingCount) {
         // Calculate the score based on the statistics
         int highestAccelerationPoints = calculateAccelerationPoints(highestAcceleration);
         int averageAccelerationPoints = calculateAverageAccelerationPoints(averageAcceleration);
         int percentageTimeAboveLimitPoints = calculatePercentageTimeAboveLimitPoints(percentageTimeAboveLimit);
-        int aggresiveAccelerationCountPoints = calculateAggresiveAccelerationCountPoints(aggresiveAccelerationCount, startTimestamp, endTimestamp);
-        int aggresiveBrakingCountCountPoints = calculateAggressiveBrakingCountCountPoints(aggresiveBrakingCount, startTimestamp, endTimestamp);
+        int aggresiveAccelerationCountPoints = calculateAggresiveAccelerationCountPoints(aggresiveAccelerationCount);
+        int aggresiveBrakingCountCountPoints = calculateAggressiveBrakingCountCountPoints(aggresiveBrakingCount);
 
 
         int overallScore = highestAccelerationPoints + averageAccelerationPoints + percentageTimeAboveLimitPoints + aggresiveAccelerationCountPoints + aggresiveBrakingCountCountPoints;
@@ -73,14 +73,15 @@ public class PointCalculatorController extends StatisticsPageView {
         return points;
     }
 
-    private static int calculateAggresiveAccelerationCountPoints(int aggresiveAccelerationCount, double startTimestamp, double endTimestamp) {
+    private static int calculateAggresiveAccelerationCountPoints(int aggresiveAccelerationCount) {
         int maxPoints = 10; // maximum points that can be earned
         int minPoints = 0; // minimum points that can be earned
         int maxCount = 50; // maximum number of aggressive accelerations that earns maxPoints
         int minCount = 10; // minimum number of aggressive accelerations that earns minPoints
 
         // calculate the points based on the number of aggressive accelerations
-        double numDays = (endTimestamp - startTimestamp) / (1000.0 * 60 * 60 * 24);
+        double numDays = (AccelerationDataDbHelper.endTimestamp - AccelerationDataDbHelper.startTimestamp) / (1000.0 * 60 * 60 * 24);
+        Log.i("POINTCALC", "Timestamp values are: " + AccelerationDataDbHelper.endTimestamp + " " + AccelerationDataDbHelper.startTimestamp);
         int points = (int) Math.round(((aggresiveAccelerationCount - minCount) / (double) (maxCount - minCount)) * (maxPoints - minPoints) + minPoints) * (int) numDays;
 
         // ensure that the points are within the allowed range
@@ -90,14 +91,14 @@ public class PointCalculatorController extends StatisticsPageView {
         return points;
     }
 
-    private static int calculateAggressiveBrakingCountCountPoints(int aggresiveBrakingCount, double startTimestamp, double endTimestamp) {
+    private static int calculateAggressiveBrakingCountCountPoints(int aggresiveBrakingCount) {
         int maxPoints = 10; // maximum points that can be earned
         int minPoints = 0; // minimum points that can be earned
         int maxCount = 50; // maximum count of aggressive braking events within the time period that earns maxPoints
         int minCount = 10; // minimum count of aggressive braking events within the time period that earns minPoints
 
         // calculate the number of days in the time period
-        double numDays = (long) Math.ceil((endTimestamp - startTimestamp) / (1000.0 * 60 * 60 * 24));
+        double numDays = (long) Math.ceil((AccelerationDataDbHelper.endTimestamp - AccelerationDataDbHelper.startTimestamp) / (1000.0 * 60 * 60 * 24));
 
         // calculate the points based on the count of aggressive braking events within the time period
         int points = (int) Math.round(((aggresiveBrakingCount - minCount) / (double) (maxCount - minCount)) * (maxPoints - minPoints) + minPoints) * (int) numDays;
