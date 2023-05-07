@@ -28,12 +28,13 @@ public class StatisticsPageView extends AppCompatActivity {
     private TextView numberOfAggressiveBrakingTextView;
     private TextView numberOfAggressiveAccelerationTextView;
     private TextView typeOfDriverTextView;
+    private RadioGroup radioGroup;
     private long startTimestamp = 0;
     private long endTimestamp = 0;
-
+    private long startPickerLastSelectedDate = 0;
+    private long endPickerLastSelectedDate = 0;
+    private int lastSelection = 0;
     private int lastSelectedRadioButtonId = 0;
-    private Calendar startPickerLastSelectedDate = null;
-    private Calendar endPickerLastSelectedDate = null;
     private long lastSelectedStartTimestamp = 0;
     private long lastSelectedEndTimestamp = 0;
 
@@ -46,7 +47,6 @@ public class StatisticsPageView extends AppCompatActivity {
         setContentView(R.layout.statistics_page);
 
 
-
         Button sortButton = findViewById(R.id.sortButton);
         sortButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -55,7 +55,7 @@ public class StatisticsPageView extends AppCompatActivity {
             }
         });
 
-    // Find each TextView by ID
+        // Find each TextView by ID
         accelerationTextView = findViewById(R.id.accelerationTextView);
         highestAccelerationTextView = findViewById(R.id.highestAccelerationTextView);
         averageTotalAccelerationTextView = findViewById(R.id.averageTotalAccelerationTextView);
@@ -63,8 +63,27 @@ public class StatisticsPageView extends AppCompatActivity {
         numberOfAggressiveBrakingTextView = findViewById(R.id.numberOfAggressiveBrakingTextView);
         numberOfAggressiveAccelerationTextView = findViewById(R.id.numberOfAggressiveAccelerationTextView);
         typeOfDriverTextView = findViewById(R.id.typeOfDriver);
-        // Update the UI with the default time range
-        updateStatisticsUI(startTimestamp, endTimestamp);
+
+
+        SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+        lastSelectedRadioButtonId = sharedPreferences.getInt("lastSelectedRadioButtonId", -1);
+        lastSelectedStartTimestamp = sharedPreferences.getLong("lastSelectedStartTimestamp", 0);
+        lastSelectedEndTimestamp = sharedPreferences.getLong("lastSelectedEndTimestamp", 0);
+        startPickerLastSelectedDate = sharedPreferences.getLong("startPickerLastSelectedDateMillis", -1);
+        endPickerLastSelectedDate = sharedPreferences.getLong("endPickerLastSelectedDateMillis", -1);
+        lastSelection = sharedPreferences.getInt("lastSelection", 1);
+        if (lastSelectedRadioButtonId != -1) {
+            RadioButton lastSelectedRadioButton = findViewById(lastSelectedRadioButtonId);
+            dbHelper.getTimestamps(lastSelection);
+            updateStatisticsUI();
+            Log.i("WARNING", "The last selection (onCreate) is: " + lastSelection);
+
+            if (lastSelectedRadioButton != null) {
+
+                lastSelectedRadioButton.setChecked(true);
+
+            }
+        }
 
     }
 
@@ -74,17 +93,25 @@ public class StatisticsPageView extends AppCompatActivity {
         // Retrieve the last selected radio button id from SharedPreferences and select it
         SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
         lastSelectedRadioButtonId = sharedPreferences.getInt("lastSelectedRadioButtonId", -1);
-        if (lastSelectedRadioButtonId != -1) {
-            RadioButton lastSelectedRadioButton = findViewById(lastSelectedRadioButtonId);
-            if (lastSelectedRadioButton != null) {
-                lastSelectedRadioButton.setChecked(true);
-            }
-        }
         lastSelectedStartTimestamp = sharedPreferences.getLong("lastSelectedStartTimestamp", 0);
         lastSelectedEndTimestamp = sharedPreferences.getLong("lastSelectedEndTimestamp", 0);
-        if(lastSelectedStartTimestamp != 0 && lastSelectedEndTimestamp != 0){
-            updateStatisticsUI(lastSelectedStartTimestamp, lastSelectedEndTimestamp);
+        startPickerLastSelectedDate = sharedPreferences.getLong("startPickerLastSelectedDate", -1);
+        endPickerLastSelectedDate = sharedPreferences.getLong("endPickerLastSelectedDate", -1);
+        Log.i("PICKERDATE", "startPickerLastSelectedDate (onResume)" + startPickerLastSelectedDate);
+        Log.i("PICKERDATE", "endPickerLastSelectedDate (onResume)" + endPickerLastSelectedDate);
+        lastSelection = sharedPreferences.getInt("lastSelection", 1);
+        if (lastSelectedRadioButtonId != -1) {
+            RadioButton lastSelectedRadioButton = findViewById(lastSelectedRadioButtonId);
+            dbHelper.getTimestamps(lastSelection);
+            updateStatisticsUI();
+            Log.i("WARNING", "The last selection (onResume) is: " + lastSelection);
+            if (lastSelectedRadioButton != null) {
+
+                lastSelectedRadioButton.setChecked(true);
+
+            }
         }
+
     }
 
     @Override
@@ -94,12 +121,16 @@ public class StatisticsPageView extends AppCompatActivity {
         SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt("lastSelectedRadioButtonId", lastSelectedRadioButtonId);
-        editor.putLong("lastSelectedStartTimestamp", lastSelectedStartTimestamp);
-        editor.putLong("lastSelectedEndTimestamp", lastSelectedEndTimestamp);
+        editor.putInt("lastSelection", lastSelection);
+        editor.putLong("startPickerLastSelectedDate", startPickerLastSelectedDate);
+        editor.putLong("endPickerLastSelectedDate", endPickerLastSelectedDate);
+        Log.i("PICKERDATE", "startPickerLastSelectedDate (onPause)" + startPickerLastSelectedDate);
+        Log.i("PICKERDATE", "endPickerLastSelectedDate (onPause)" + endPickerLastSelectedDate);
         editor.apply();
     }
 
     private void showFilterDialog() {
+
 
         // Create a new dialog
         Dialog dialog = new Dialog(this);
@@ -112,26 +143,21 @@ public class StatisticsPageView extends AppCompatActivity {
             lastSelectedRadioButton.setChecked(true);
         }
 
-        // Load the last selected dates from SharedPreferences
-        SharedPreferences preferences = getSharedPreferences("MyPreferences", MODE_PRIVATE);
-        long startPickerLastSelectedDateMillis = preferences.getLong("startPickerLastSelectedDate", -1);
-        long endPickerLastSelectedDateMillis = preferences.getLong("endPickerLastSelectedDate", -1);
-
-
         // Set the default values for the date pickers if last selected dates are available
-        if (startPickerLastSelectedDateMillis != -1) {
+        if (startPickerLastSelectedDate != -1) {
             Calendar startCalendar = Calendar.getInstance();
-            startCalendar.setTimeInMillis(startPickerLastSelectedDateMillis);
+            startCalendar.setTimeInMillis(startPickerLastSelectedDate);
             DatePicker startDatePicker = dialog.findViewById(R.id.fromDatePicker);
             startDatePicker.init(startCalendar.get(Calendar.YEAR), startCalendar.get(Calendar.MONTH), startCalendar.get(Calendar.DAY_OF_MONTH), null);
         }
 
-        if (endPickerLastSelectedDateMillis != -1) {
+        if (endPickerLastSelectedDate != -1) {
             Calendar endCalendar = Calendar.getInstance();
-            endCalendar.setTimeInMillis(endPickerLastSelectedDateMillis);
+            endCalendar.setTimeInMillis(endPickerLastSelectedDate);
             DatePicker endDatePicker = dialog.findViewById(R.id.toDatePicker);
             endDatePicker.init(endCalendar.get(Calendar.YEAR), endCalendar.get(Calendar.MONTH), endCalendar.get(Calendar.DAY_OF_MONTH), null);
         }
+
 
         dialog.show();
 
@@ -141,46 +167,54 @@ public class StatisticsPageView extends AppCompatActivity {
         lp.height = WindowManager.LayoutParams.MATCH_PARENT;
         dialog.getWindow().setAttributes(lp);
 
-
         // Set up the confirm button
         Button confirmButton = dialog.findViewById(R.id.confirmButton);
         confirmButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 RadioGroup timeRangeRadioGroup = dialog.findViewById(R.id.radioGroup);
                 int selectedRadioButtonId = timeRangeRadioGroup.getCheckedRadioButtonId();
                 lastSelectedRadioButtonId = selectedRadioButtonId;
+                int selection = 0;
                 long startTimestamp = 0;
                 long endTimestamp = 0;
                 if (selectedRadioButtonId == R.id.todaysValues) {
-                    // Get data for today
-                    Calendar calendar = Calendar.getInstance();
-                    calendar.set(Calendar.HOUR_OF_DAY, 0);
-                    calendar.set(Calendar.MINUTE, 0);
-                    calendar.set(Calendar.SECOND, 0);
-                    startTimestamp = calendar.getTimeInMillis();
-                    endTimestamp = System.currentTimeMillis();
-                    lastSelectedStartTimestamp  = startTimestamp;
-                    lastSelectedEndTimestamp = endTimestamp;
+                    Log.i("BUTTON", "Selected button " + selectedRadioButtonId);
+                    selection = 1;
+                    lastSelection = selection;
+                    dbHelper.getTimestamps(selection);
+
+
                 } else if (selectedRadioButtonId == R.id.values24hAgo) {
-                    // Get data from the past 24 hours
-                    startTimestamp = System.currentTimeMillis() - 86400000L; // 86400000 ms = 24 hours
-                    endTimestamp = System.currentTimeMillis();
-                    lastSelectedStartTimestamp  = startTimestamp;
-                    lastSelectedEndTimestamp = endTimestamp;
+                    Log.i("BUTTON", "Selected button " + selectedRadioButtonId);
+                    lastSelectedRadioButtonId = selectedRadioButtonId;
+                    selection = 2;
+                    lastSelection = selection;
+                    dbHelper.getTimestamps(selection);
+
                 } else if (selectedRadioButtonId == R.id.lastWeekValues) {
-                    // Get data from the past 7 days
-                    startTimestamp = System.currentTimeMillis() - 604800000L; // 604800000 ms = 7 days
-                    endTimestamp = System.currentTimeMillis();
-                    lastSelectedStartTimestamp  = startTimestamp;
-                    lastSelectedEndTimestamp = endTimestamp;
+                    Log.i("BUTTON", "Selected button " + selectedRadioButtonId);
+                    lastSelectedRadioButtonId = selectedRadioButtonId;
+                    selection = 3;
+                    lastSelection = selection;
+                    dbHelper.getTimestamps(selection);
+
                 } else if (selectedRadioButtonId == R.id.lastMonthValues) {
-                    // Get data from the past 30 days
-                    startTimestamp = System.currentTimeMillis() - 2592000000L; // 2592000000 ms = 30 days
-                    endTimestamp = System.currentTimeMillis();
-                    lastSelectedStartTimestamp  = startTimestamp;
-                    lastSelectedEndTimestamp = endTimestamp;
+                    Log.i("BUTTON", "Selected button " + selectedRadioButtonId);
+                    lastSelectedRadioButtonId = selectedRadioButtonId;
+                    selection = 4;
+                    lastSelection = selection;
+                    dbHelper.getTimestamps(selection);
+
                 } else if (selectedRadioButtonId == R.id.customValues) {
+                    Log.i("BUTTON", "Selected button " + selectedRadioButtonId);
+                    lastSelectedRadioButtonId = selectedRadioButtonId;
+
+                    // Set the "Custom values" radio button as checked
+                    RadioButton customValuesRadioButton = dialog.findViewById(R.id.customValues);
+                    customValuesRadioButton.setChecked(true);
+
                     Calendar startCalendar = Calendar.getInstance();
                     DatePicker startDatePicker = dialog.findViewById(R.id.fromDatePicker);
                     startCalendar.set(startDatePicker.getYear(), startDatePicker.getMonth(), startDatePicker.getDayOfMonth(), 0, 0, 0);
@@ -193,39 +227,31 @@ public class StatisticsPageView extends AppCompatActivity {
                     endCalendar.set(Calendar.MILLISECOND, 999);
                     endTimestamp = endCalendar.getTimeInMillis();
 
-                    lastSelectedStartTimestamp  = startTimestamp;
-                    lastSelectedEndTimestamp = endTimestamp;
-
-                    startPickerLastSelectedDate = startCalendar;
-                    endPickerLastSelectedDate = endCalendar;
-
+                    startPickerLastSelectedDate = startTimestamp;
+                    endPickerLastSelectedDate = endTimestamp;
+                    dbHelper.getTimestamps(lastSelectedStartTimestamp, lastSelectedEndTimestamp);
                 }
 
-
-                // Update the statistics UI with the selected time range
-                updateStatisticsUI(startTimestamp, endTimestamp);
-
+                updateStatisticsUI();
                 // Dismiss the dialog
                 dialog.dismiss();
             }
         });
     }
 
-    private void updateStatisticsUI(long startTimestamp, long endTimestamp) {
+    private void updateStatisticsUI() {
+
+
         // Update the UI with the new data
 
-        double highestAcceleration = dbHelper.getHighestAcceleration(startTimestamp, endTimestamp);
-        double averageAcceleration = dbHelper.getAverageAcceleration(startTimestamp, endTimestamp);
-        double timeSpentAboveLimit = dbHelper.getTimeSpentAboveLimit(startTimestamp, endTimestamp);
-        double percentageTimeAboveLimit = dbHelper.getPercentageAboveThreshold(startTimestamp, endTimestamp);
-        int aggressiveBrakingCount = dbHelper.getAggressiveBrakingCount(startTimestamp, endTimestamp);
-        int aggressiveAccelerationCount = dbHelper.getAggressiveAccelerationCount(startTimestamp, endTimestamp);
+        double highestAcceleration = dbHelper.getHighestAcceleration();
+        double averageAcceleration = dbHelper.getAverageAcceleration();
+        double timeSpentAboveLimit = dbHelper.getTimeSpentAboveLimit();
+        double percentageTimeAboveLimit = dbHelper.getPercentageAboveThreshold();
+        int aggressiveBrakingCount = dbHelper.getAggressiveBrakingCount();
+        int aggressiveAccelerationCount = dbHelper.getAggressiveAccelerationCount();
 
         String totalScore = PointCalculatorController.calculateScore(highestAcceleration, averageAcceleration, timeSpentAboveLimit, percentageTimeAboveLimit, aggressiveAccelerationCount, aggressiveBrakingCount, startTimestamp, endTimestamp);
-
-
-
-
         // Set text and colors for each TextView based on the calculated statistics
         highestAccelerationTextView.setText("Najveće zabilježeno ubrzavanje: " + highestAcceleration + "m/s^2");
         highestAccelerationTextView.setTextColor(highestAcceleration >= 3.5f ? Color.RED : Color.GREEN);
@@ -251,5 +277,6 @@ public class StatisticsPageView extends AppCompatActivity {
 
         typeOfDriverTextView.setText("Vi ste: " + totalScore);
     }
+
 
 }
