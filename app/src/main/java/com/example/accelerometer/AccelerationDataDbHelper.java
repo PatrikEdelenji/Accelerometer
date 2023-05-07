@@ -313,15 +313,16 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
 
 
         }
-        startTimestamp = timestamps[0];
-        endTimestamp = timestamps[1];
+        this.startTimestamp = timestamps[0];
+        this.endTimestamp = timestamps[1];
     }
 
-    public long[] getTimestamps(long startTimestamp, long endTimestamp) {
+    public void getTimestamps(long startTimestamp, long endTimestamp) {
         long[] timestamps = new long[2];
         timestamps[0] = startTimestamp;
         timestamps[1] = endTimestamp;
-        return timestamps;
+        this.startTimestamp = timestamps[0];
+        this.endTimestamp = timestamps[1];
     }
 
 
