@@ -1,6 +1,8 @@
 package com.example.accelerometer;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.graphics.Typeface;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -9,9 +11,11 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.util.Log;
+import android.widget.TextView;
 
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.res.ResourcesCompat;
 
 
 public class AccelerationController extends AppCompatActivity implements SensorEventListener {
@@ -27,9 +31,13 @@ public class AccelerationController extends AppCompatActivity implements SensorE
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // set screen orientation to portrait
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
         // Initialize sensor manager and accelerometer sensor
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
 
         // Get a reference to the TextView that will show the acceleration values
         AccelerationView = findViewById(R.id.GaugeView);
@@ -76,15 +84,18 @@ public class AccelerationController extends AppCompatActivity implements SensorE
 
             AccelerationView.setAccelerationValue(acceleration);
 
-            /* Update the TextView with the new acceleration value
-            TextView accelerationTextView = findViewById(R.id.accelerationTextView);
-            accelerationTextView.setText("Acceleration: " + acceleration + " m/s²");
-            */
+            // Load the font from the app/res/font/ directory
+            Typeface digitalFont = Typeface.createFromAsset(getResources().getAssets(), "font/digital.ttf");
 
+// Update the TextView with the new acceleration value
+            TextView accelerationTextView = findViewById(R.id.accelerationTextView);
+            accelerationTextView.setTypeface(digitalFont);
+            accelerationTextView.setText(String.format("%.2f \n m/s²", acceleration));
             long timestamp = System.currentTimeMillis();
 
             // Add acceleration data to the database
             dbHelper.addAccelerationData(acceleration, x, y, z, timestamp);
+
         }
     }
 

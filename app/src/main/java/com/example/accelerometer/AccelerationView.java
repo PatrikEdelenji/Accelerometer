@@ -7,13 +7,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.Typeface;
-
 import android.util.AttributeSet;
-
 import android.view.View;
-import android.widget.Button;
-import android.widget.FrameLayout;
+import android.widget.TextView;
 
 
 import androidx.core.graphics.ColorUtils;
@@ -34,9 +30,7 @@ public class AccelerationView extends View {
     private float startAngle = -90f;
     private float endAngle = 90f;
     private float numDivisions = 10;
-    private float accelerationValueTextPadding = 10f;
-    private Button myButton;
-    private FrameLayout.LayoutParams buttonParams;
+
 
 
     public AccelerationView(Context context, AttributeSet attrs) {
@@ -46,6 +40,7 @@ public class AccelerationView extends View {
     }
 
     private void init() {
+
         // Initialize the paints
         gaugePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         gaugePaint.setStyle(Paint.Style.STROKE);
@@ -66,7 +61,7 @@ public class AccelerationView extends View {
     //Smoothens out the needle animation
     public void setAccelerationValue(float acceleration) {
         ValueAnimator animator = ValueAnimator.ofFloat(accelerationValue, acceleration);
-        animator.setDuration(500);
+        animator.setDuration(200);
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
@@ -89,6 +84,7 @@ public class AccelerationView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+
 
         // Changes the position of the gauge
         float centerX = canvas.getWidth() / 2f;
@@ -162,22 +158,5 @@ public class AccelerationView extends View {
         // Draw the gauge outline
         canvas.drawArc(centerX - radius, centerY - radius, centerX + radius, centerY + radius, 180f, 180f, false, gaugePaint);
 
-        // Draw the acceleration value text
-        String accelerationValueText = "Acceleration: " + String.format("%.2f", accelerationValue) + " m/s^2";
-        Paint accelerationValueTextPaint = new Paint();
-        accelerationValueTextPaint.setColor(Color.BLACK);
-        accelerationValueTextPaint.setTextSize(50f);
-
-        accelerationValueTextPaint.setTextAlign(Paint.Align.CENTER);
-        accelerationValueTextPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
-        float accelerationValueTextWidth = accelerationValueTextPaint.measureText(accelerationValueText);
-        float accelerationValueTextX = centerX;
-        float accelerationValueTextY = centerY + radius + accelerationValueTextPadding + textHeight;
-        canvas.drawText(accelerationValueText, accelerationValueTextX, accelerationValueTextY, accelerationValueTextPaint);
-
-
     }
-
-
-
 }

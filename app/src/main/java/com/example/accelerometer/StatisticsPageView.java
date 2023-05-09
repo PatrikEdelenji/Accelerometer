@@ -28,9 +28,6 @@ public class StatisticsPageView extends AppCompatActivity {
     private TextView numberOfAggressiveBrakingTextView;
     private TextView numberOfAggressiveAccelerationTextView;
     private TextView typeOfDriverTextView;
-    private RadioGroup radioGroup;
-    private long startTimestamp = 0;
-    private long endTimestamp = 0;
     private long startPickerLastSelectedDate = 0;
     private long endPickerLastSelectedDate = 0;
     private int lastSelection = 0;
@@ -87,6 +84,9 @@ public class StatisticsPageView extends AppCompatActivity {
 
     }
 
+
+
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -114,6 +114,9 @@ public class StatisticsPageView extends AppCompatActivity {
 
     }
 
+
+
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -126,6 +129,9 @@ public class StatisticsPageView extends AppCompatActivity {
         editor.putLong("endPickerLastSelectedDate", endPickerLastSelectedDate);
         editor.apply();
     }
+
+
+
 
     private void showFilterDialog() {
 
@@ -241,7 +247,6 @@ public class StatisticsPageView extends AppCompatActivity {
         int aggressiveAccelerationCount = dbHelper.getAggressiveAccelerationCount();
 
         String totalScore = PointCalculatorController.calculateScore(highestAcceleration, averageAcceleration, timeSpentAboveLimit, percentageTimeAboveLimit, aggressiveAccelerationCount, aggressiveBrakingCount);
-        Log.i("IDK", "Timestamps for calculating totalScore = " + startTimestamp + " " + endTimestamp);
         // Set text and colors for each TextView based on the calculated statistics
         highestAccelerationTextView.setText("Najveće zabilježeno ubrzavanje: " + highestAcceleration + "m/s^2");
         highestAccelerationTextView.setTextColor(highestAcceleration >= 3.5f ? Color.RED : Color.GREEN);
