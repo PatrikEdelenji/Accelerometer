@@ -12,7 +12,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.util.Log;
+import android.widget.CompoundButton;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -24,9 +26,9 @@ public class AccelerationController extends AppCompatActivity implements SensorE
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private MediaPlayer mediaPlayer;
-    //private TextView accelerationTextView;
     private AccelerationDataDbHelper dbHelper;
     private AccelerationView AccelerationView;
+    private boolean isSoundEnabled = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +59,14 @@ public class AccelerationController extends AppCompatActivity implements SensorE
                 // Add code to start the StatisticsPageView activity
                 Intent intent = new Intent(AccelerationController.this, StatisticsPageView.class);
                 startActivity(intent);
+            }
+        });
+
+        ToggleButton soundToggleButton = findViewById(R.id.soundToggleButton);
+        soundToggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                isSoundEnabled = isChecked;
             }
         });
 
@@ -114,7 +124,7 @@ public class AccelerationController extends AppCompatActivity implements SensorE
 
 
     private void playWarningSound() {
-        if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
+        if (isSoundEnabled && mediaPlayer != null && !mediaPlayer.isPlaying()) {
             mediaPlayer.start();
         }
     }
