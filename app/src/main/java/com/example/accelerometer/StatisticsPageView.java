@@ -249,10 +249,10 @@ public class StatisticsPageView extends AppCompatActivity {
         String totalScore = PointCalculatorController.calculateScore(highestAcceleration, averageAcceleration, timeSpentAboveLimit, percentageTimeAboveLimit, aggressiveAccelerationCount, aggressiveBrakingCount);
         // Set text and colors for each TextView based on the calculated statistics
         highestAccelerationTextView.setText("Najveće zabilježeno ubrzavanje: " + highestAcceleration + "m/s^2");
-        highestAccelerationTextView.setTextColor(highestAcceleration >= 3.5f ? Color.RED : Color.GREEN);
+        highestAccelerationTextView.setTextColor(highestAcceleration >= 2.93 ? Color.RED : Color.GREEN);
 
         averageTotalAccelerationTextView.setText("Prosječno zabilježeno ubrzavanje: " + averageAcceleration + "m/s^2");
-        averageTotalAccelerationTextView.setTextColor(averageAcceleration >= 3.5f ? Color.RED : Color.GREEN);
+        averageTotalAccelerationTextView.setTextColor(averageAcceleration >= 2.93f ? Color.RED : Color.GREEN);
 
         long timeSpentAboveLimitInSeconds = (long) timeSpentAboveLimit / 1000;
         long hours = TimeUnit.SECONDS.toHours(timeSpentAboveLimitInSeconds);

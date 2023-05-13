@@ -7,6 +7,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -22,6 +23,7 @@ public class AccelerationController extends AppCompatActivity implements SensorE
 
     private SensorManager sensorManager;
     private Sensor accelerometer;
+    private MediaPlayer mediaPlayer;
     //private TextView accelerationTextView;
     private AccelerationDataDbHelper dbHelper;
     private AccelerationView AccelerationView;
@@ -29,6 +31,8 @@ public class AccelerationController extends AppCompatActivity implements SensorE
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Initialize MediaPlayer with the warning sound file
+        mediaPlayer = MediaPlayer.create(this, R.raw.warning_sound);
         setContentView(R.layout.activity_main);
 
         // set screen orientation to portrait
@@ -62,6 +66,7 @@ public class AccelerationController extends AppCompatActivity implements SensorE
     protected void onResume() {
         super.onResume();
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        // I tried playing with those - GAME, FASTEST, UI
     }
 
     @Override
@@ -82,15 +87,18 @@ public class AccelerationController extends AppCompatActivity implements SensorE
             float z = event.values[2];
             float acceleration = (float) Math.sqrt(x * x + y * y + z * z) - 9.81f;
 
+            // Check if acceleration is outside the desired range
+            if (acceleration > 2.98 || acceleration < -2.98) {
+                playWarningSound();
+            }
+
             AccelerationView.setAccelerationValue(acceleration);
 
             // Load the font from the app/res/font/ directory
-            Typeface digitalFont = Typeface.createFromAsset(getResources().getAssets(), "font/digital.ttf");
 
 // Update the TextView with the new acceleration value
             TextView accelerationTextView = findViewById(R.id.accelerationTextView);
-            accelerationTextView.setTypeface(digitalFont);
-            accelerationTextView.setText(String.format("%.2f \n m/s²", acceleration));
+            accelerationTextView.setText(String.format("    %.1f \n   m/s²", acceleration));
             long timestamp = System.currentTimeMillis();
 
             // Add acceleration data to the database
@@ -102,5 +110,12 @@ public class AccelerationController extends AppCompatActivity implements SensorE
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         // Not required in this example
+    }
+
+
+    private void playWarningSound() {
+        if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
+            mediaPlayer.start();
+        }
     }
 }

@@ -120,7 +120,7 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
         String query = "SELECT SUM((timestamp - prev_timestamp) / 1000.0) " +
                 "FROM (SELECT timestamp, LAG(timestamp) OVER (ORDER BY timestamp) AS prev_timestamp " +
-                "FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ? AND acceleration > 3.5) " +
+                "FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ? AND acceleration > 2.98) " +
                 "WHERE prev_timestamp IS NOT NULL";
         String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp) };
         Cursor cursor = db.rawQuery(query, args);
@@ -144,25 +144,25 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
     public int getAggressiveAccelerationCount() {
         SQLiteDatabase db = this.getReadableDatabase();
 
-        // Query to get all acceleration values below -3.5 within the time range
+        // Query to get all acceleration values below -2.98 within the time range
         String query = "SELECT acceleration FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ? AND acceleration";
 
         // Execute the query
         String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp) };
         Cursor cursor = db.rawQuery(query, args);
 
-        // Count the number of times the acceleration value goes below -3.5
+        // Count the number of times the acceleration value goes below -2.98
         int aggressiveAccelerationCount = 0;
         boolean wasAboveThreshold = false;
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 double acceleration = cursor.getDouble(0);
-                if (!wasAboveThreshold && acceleration >= 3.5) {
-                    // The acceleration value has just gone above 3.5, so increment the count
+                if (!wasAboveThreshold && acceleration >= 2.98) {
+                    // The acceleration value has just gone above 2.98, so increment the count
                     aggressiveAccelerationCount++;
                     wasAboveThreshold = true;
-                } else if (wasAboveThreshold && acceleration < 3.5) {
-                    // The acceleration value has just gone above -3.5 after being below it, so reset the flag
+                } else if (wasAboveThreshold && acceleration < 2.98) {
+                    // The acceleration value has just gone above -2.98 after being below it, so reset the flag
                     wasAboveThreshold = false;
                 }
             } while (cursor.moveToNext());
@@ -178,25 +178,25 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
     public int getAggressiveBrakingCount() {
         SQLiteDatabase db = this.getReadableDatabase();
 
-        // Query to get all acceleration values below -3.5 within the time range
+        // Query to get all acceleration values below -2.98 within the time range
         String query = "SELECT acceleration FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ?";
 
         // Execute the query
         String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp) };
         Cursor cursor = db.rawQuery(query, args);
 
-        // Count the number of times the acceleration value goes below -3.5
+        // Count the number of times the acceleration value goes below -2.98
         int aggressiveBrakingCount = 0;
         boolean wasBelowThreshold = false;
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 double acceleration = cursor.getDouble(0);
-                if (!wasBelowThreshold && acceleration < -3.5) {
-                    // The deceleration value has just gone below -3.5, so increment the count
+                if (!wasBelowThreshold && acceleration < -2.98) {
+                    // The deceleration value has just gone below -2.98, so increment the count
                     aggressiveBrakingCount++;
                     wasBelowThreshold = true;
-                } else if (wasBelowThreshold && acceleration >= -3.5) {
-                    // The deceleration value has just gone above -3.5 after being below it, so reset the flag
+                } else if (wasBelowThreshold && acceleration >= -2.98) {
+                    // The deceleration value has just gone above -2.98 after being below it, so reset the flag
                     wasBelowThreshold = false;
                 }
             } while (cursor.moveToNext());
