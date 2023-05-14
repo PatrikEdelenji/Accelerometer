@@ -15,7 +15,10 @@ import android.widget.DatePicker;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 
@@ -173,6 +176,55 @@ public class StatisticsPageView extends AppCompatActivity {
 
         // Set up the confirm button
         Button confirmButton = dialog.findViewById(R.id.confirmButton);
+
+
+        Button deleteButton = dialog.findViewById(R.id.deleteButton);
+        deleteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Show the confirmation dialog
+                Dialog confirmationDialog = new Dialog(StatisticsPageView.this);
+                confirmationDialog.setContentView(R.layout.confirmation_dialog);
+                confirmationDialog.setCancelable(false);
+
+                // Get the timestamp of the data to be deleted
+                long timestamp = dbHelper.getTimestampOfDataToBeDeleted(); // Replace this with your actual method to retrieve the timestamp
+
+                // Format the timestamp into a readable date and time string
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                String formattedDate = dateFormat.format(new Date(timestamp));
+
+                // Set the formatted date in the confirmation dialog
+                TextView dateTextView = confirmationDialog.findViewById(R.id.dateTextView);
+                dateTextView.setText(formattedDate);
+
+                // Set up the buttons
+                Button yesButton = confirmationDialog.findViewById(R.id.yesButton);
+                Button noButton = confirmationDialog.findViewById(R.id.noButton);
+
+                yesButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dbHelper.removeDataByTimestamp();  // Call the data deletion method
+                        confirmationDialog.dismiss();
+                        dialog.dismiss();
+
+                        onDataDeleted(); // Notify the data deletion to StatisticsPageView
+                    }
+                });
+
+                noButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        confirmationDialog.dismiss();
+                    }
+                });
+
+                confirmationDialog.show();
+            }
+        });
+
+
         confirmButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -226,6 +278,11 @@ public class StatisticsPageView extends AppCompatActivity {
                 editor.putLong("endPickerLastSelectedDate", endPickerLastSelectedDate);
                 Log.i("SELECTION", "Stored last selection INSIDE DIALOG = " + lastSelection);
                 editor.apply();
+
+
+                // Set up the delete button
+
+
 
                 updateStatisticsUI();
                 // Dismiss the dialog

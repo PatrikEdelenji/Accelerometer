@@ -292,27 +292,44 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
         return aggressiveRightTurnCount;
     }
 
-    public void getTimestamps(int selection){
-        long[] timestamps = new long[2];
-        if(selection == 1){
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(Calendar.HOUR_OF_DAY, 0);
-            calendar.set(Calendar.MINUTE, 0);
-            calendar.set(Calendar.SECOND, 0);
-            timestamps[0] = calendar.getTimeInMillis();
-            timestamps[1] = System.currentTimeMillis();
-        } else if(selection == 2){
-            timestamps[0] = System.currentTimeMillis() - 86400000L; // 86400000 ms = 24 hours
-            timestamps[1] = System.currentTimeMillis();
-        } else if(selection == 3){
-            timestamps[0] = System.currentTimeMillis() - 604800000L; // 604800000 ms = 7 days
-            timestamps[1] = System.currentTimeMillis();
-        } else if(selection == 4){
-            timestamps[0] = System.currentTimeMillis() - 2592000000L; // 2592000000 ms = 30 days
-            timestamps[1] = System.currentTimeMillis();
+    public void removeDataByTimestamp() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String whereClause = COLUMN_TIMESTAMP + " BETWEEN ? AND ?";
+        String[] whereArgs = { String.valueOf(startTimestamp), String.valueOf(endTimestamp) };
+        db.delete(TABLE_NAME, whereClause, whereArgs);
+        db.close();
+    }
 
+    public void getTimestamps(int selection) {
+        long[] timestamps = new long[2];
+
+        switch (selection) {
+            case 1:
+                Calendar calendar = Calendar.getInstance();
+                calendar.set(Calendar.HOUR_OF_DAY, 0);
+                calendar.set(Calendar.MINUTE, 0);
+                calendar.set(Calendar.SECOND, 0);
+                timestamps[0] = calendar.getTimeInMillis();
+                timestamps[1] = System.currentTimeMillis();
+                break;
+
+            case 2:
+                timestamps[0] = System.currentTimeMillis() - 86400000L; // 86400000 ms = 24 hours
+                timestamps[1] = System.currentTimeMillis();
+                break;
+
+            case 3:
+                timestamps[0] = System.currentTimeMillis() - 604800000L; // 604800000 ms = 7 days
+                timestamps[1] = System.currentTimeMillis();
+                break;
+
+            case 4:
+                timestamps[0] = System.currentTimeMillis() - 2592000000L; // 2592000000 ms = 30 days
+                timestamps[1] = System.currentTimeMillis();
+                break;
 
         }
+
         this.startTimestamp = timestamps[0];
         this.endTimestamp = timestamps[1];
     }
@@ -324,8 +341,5 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
         this.startTimestamp = timestamps[0];
         this.endTimestamp = timestamps[1];
     }
-
-
-
 
 }

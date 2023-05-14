@@ -72,10 +72,24 @@
 
     </LinearLayout>
 
-    <Button
-        android:id="@+id/confirmButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Confirm" />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/confirmButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Confirm"
+            android:layout_alignParentLeft="true" />
+
+        <Button
+            android:id="@+id/deleteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="DELETE"
+            android:layout_alignParentRight="true" />
+
+    </RelativeLayout>
 
 </LinearLayout>
