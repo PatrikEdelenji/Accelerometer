@@ -39,14 +39,14 @@
         android:layout_above="@id/statistics_page_button"
         android:layout_marginTop="16dp"
         android:checked="true"
-        android:textOff="Sound OFF"
-        android:textOn="Sound ON" />
+        android:textOff="Zvuk: ISKLJUČEN"
+        android:textOn="Zvuk: UKLJUČEN" />
 
     <Button
         android:id="@+id/statistics_page_button"
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:layout_alignParentBottom="true"
-        android:text="Statistics" />
+        android:text="Statistike o vozaču" />
 
 </RelativeLayout>

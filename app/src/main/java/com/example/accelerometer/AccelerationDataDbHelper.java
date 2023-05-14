@@ -327,6 +327,10 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
                 timestamps[0] = System.currentTimeMillis() - 2592000000L; // 2592000000 ms = 30 days
                 timestamps[1] = System.currentTimeMillis();
                 break;
+            case 5:
+                timestamps[0] = 0;
+                timestamps[1] = System.currentTimeMillis();
+                break;
 
         }
 
@@ -340,6 +344,13 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
         timestamps[1] = endTimestamp;
         this.startTimestamp = timestamps[0];
         this.endTimestamp = timestamps[1];
+    }
+
+    public long[] getCurrentTimestamps() {
+        long[] timestamps = new long[2];
+        timestamps[0] = startTimestamp;
+        timestamps[1] = endTimestamp;
+        return timestamps;
     }
 
 }

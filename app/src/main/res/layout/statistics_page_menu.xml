@@ -20,31 +20,37 @@
             android:id="@+id/todaysValues"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Today's values" />
+            android:text="Podaci od danas" />
 
         <RadioButton
             android:id="@+id/values24hAgo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Values from 24h ago" />
+            android:text="Podaci od zadnja 24 sta" />
 
         <RadioButton
             android:id="@+id/lastWeekValues"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Values from last week" />
+            android:text="Podaci od prošlih 7 dana" />
 
         <RadioButton
             android:id="@+id/lastMonthValues"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Values from last month" />
+            android:text="Podaci od zadnjih 30 dana" />
+
+        <RadioButton
+            android:id="@+id/allTimeValues"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Svi podaci" />
 
         <RadioButton
             android:id="@+id/customValues"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Custom values" />
+            android:text="Podaci od:" />
 
     </RadioGroup>
 
@@ -80,14 +86,14 @@
             android:id="@+id/confirmButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Confirm"
+            android:text="Potvrdi"
             android:layout_alignParentLeft="true" />
 
         <Button
             android:id="@+id/deleteButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="DELETE"
+            android:text="OBRIŠI"
             android:layout_alignParentRight="true" />
 
     </RelativeLayout>

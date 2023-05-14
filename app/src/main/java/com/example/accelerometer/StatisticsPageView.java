@@ -15,26 +15,33 @@ import android.widget.DatePicker;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 
 public class StatisticsPageView extends AppCompatActivity {
 
-    private TextView accelerationTextView;
+
     private TextView highestAccelerationTextView;
     private TextView averageTotalAccelerationTextView;
     private TextView timeAboveLimitTextView;
     private TextView numberOfAggressiveBrakingTextView;
     private TextView numberOfAggressiveAccelerationTextView;
     private TextView typeOfDriverTextView;
+    private TextView selectedTimestampsTextView;
     private long startPickerLastSelectedDate = 0;
     private long endPickerLastSelectedDate = 0;
     private int lastSelection = 0;
     private int lastSelectedRadioButtonId = 0;
+    long startTimestamp = 0;
+    long endTimestamp = 0;
+    String startDate = "";
+    String endDate = "";
 
 
 
@@ -53,13 +60,13 @@ public class StatisticsPageView extends AppCompatActivity {
             }
         });
 
-        // Find each TextView by ID
-        accelerationTextView = findViewById(R.id.accelerationTextView);
         highestAccelerationTextView = findViewById(R.id.highestAccelerationTextView);
         averageTotalAccelerationTextView = findViewById(R.id.averageTotalAccelerationTextView);
         timeAboveLimitTextView = findViewById(R.id.timeAboveLimitTextView);
         numberOfAggressiveBrakingTextView = findViewById(R.id.numberOfAggressiveBrakingTextView);
         numberOfAggressiveAccelerationTextView = findViewById(R.id.numberOfAggressiveAccelerationTextView);
+        selectedTimestampsTextView = findViewById(R.id.selectedTimestampsTextView);
+
         typeOfDriverTextView = findViewById(R.id.typeOfDriver);
 
 
@@ -84,11 +91,7 @@ public class StatisticsPageView extends AppCompatActivity {
                 lastSelectedRadioButton.setChecked(true);
             }
         }
-
     }
-
-
-
 
     @Override
     protected void onResume() {
@@ -114,11 +117,7 @@ public class StatisticsPageView extends AppCompatActivity {
                 lastSelectedRadioButton.setChecked(true);
             }
         }
-
     }
-
-
-
 
     @Override
     protected void onPause() {
@@ -134,10 +133,7 @@ public class StatisticsPageView extends AppCompatActivity {
     }
 
 
-
-
     private void showFilterDialog() {
-
 
         // Create a new dialog
         Dialog dialog = new Dialog(this);
@@ -165,7 +161,6 @@ public class StatisticsPageView extends AppCompatActivity {
             endDatePicker.init(endCalendar.get(Calendar.YEAR), endCalendar.get(Calendar.MONTH), endCalendar.get(Calendar.DAY_OF_MONTH), null);
         }
 
-
         dialog.show();
 
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
@@ -187,16 +182,29 @@ public class StatisticsPageView extends AppCompatActivity {
                 confirmationDialog.setContentView(R.layout.confirmation_dialog);
                 confirmationDialog.setCancelable(false);
 
-                // Get the timestamp of the data to be deleted
-                long timestamp = dbHelper.getTimestampOfDataToBeDeleted(); // Replace this with your actual method to retrieve the timestamp
+                // Get the timestamps of the data to be deleted
+                long[] timestamps = dbHelper.getCurrentTimestamps();
+                startTimestamp = timestamps[0];
+                endTimestamp = timestamps[1];
 
-                // Format the timestamp into a readable date and time string
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-                String formattedDate = dateFormat.format(new Date(timestamp));
+                // Format the timestamps into readable date and time strings
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault());
+                String startDate = dateFormat.format(new Date(startTimestamp));
+                String endDate = dateFormat.format(new Date(endTimestamp));
+                String message = "";
 
-                // Set the formatted date in the confirmation dialog
-                TextView dateTextView = confirmationDialog.findViewById(R.id.dateTextView);
-                dateTextView.setText(formattedDate);
+
+                if (startTimestamp != 0){
+                    message = "Jeste li sigurni da želite obrisati podatke od: " + startDate + " do " + endDate + "?";
+                }
+                else{
+                    message = "Jeste li sigurni da želite obrisati SVE podatke?";
+                }
+
+
+                // Set the message in the confirmation dialog
+                TextView timestampsTextView = confirmationDialog.findViewById(R.id.timestampsTextView);
+                timestampsTextView.setText(message);
 
                 // Set up the buttons
                 Button yesButton = confirmationDialog.findViewById(R.id.yesButton);
@@ -207,9 +215,9 @@ public class StatisticsPageView extends AppCompatActivity {
                     public void onClick(View v) {
                         dbHelper.removeDataByTimestamp();  // Call the data deletion method
                         confirmationDialog.dismiss();
-                        dialog.dismiss();
 
-                        onDataDeleted(); // Notify the data deletion to StatisticsPageView
+                        // Show data deleted notification
+                        Toast.makeText(StatisticsPageView.this, "Podaci obrisani!", Toast.LENGTH_SHORT).show();
                     }
                 });
 
@@ -252,9 +260,14 @@ public class StatisticsPageView extends AppCompatActivity {
                     lastSelection = 4;
                     dbHelper.getTimestamps(lastSelection);
 
-                } else if (selectedRadioButtonId == R.id.customValues) {
+                } else if (selectedRadioButtonId == R.id.allTimeValues) {
                     lastSelectedRadioButtonId = selectedRadioButtonId;
                     lastSelection = 5;
+                    dbHelper.getTimestamps(lastSelection);
+
+                }else if (selectedRadioButtonId == R.id.customValues) {
+                    lastSelectedRadioButtonId = selectedRadioButtonId;
+                    lastSelection = 6;
                     Calendar startCalendar = Calendar.getInstance();
                     DatePicker startDatePicker = dialog.findViewById(R.id.fromDatePicker);
                     startCalendar.set(startDatePicker.getYear(), startDatePicker.getMonth(), startDatePicker.getDayOfMonth(), 0, 0, 0);
@@ -279,13 +292,7 @@ public class StatisticsPageView extends AppCompatActivity {
                 Log.i("SELECTION", "Stored last selection INSIDE DIALOG = " + lastSelection);
                 editor.apply();
 
-
-                // Set up the delete button
-
-
-
                 updateStatisticsUI();
-                // Dismiss the dialog
                 dialog.dismiss();
             }
         });
@@ -304,7 +311,6 @@ public class StatisticsPageView extends AppCompatActivity {
         int aggressiveAccelerationCount = dbHelper.getAggressiveAccelerationCount();
 
         String totalScore = PointCalculatorController.calculateScore(highestAcceleration, averageAcceleration, timeSpentAboveLimit, percentageTimeAboveLimit, aggressiveAccelerationCount, aggressiveBrakingCount);
-        // Set text and colors for each TextView based on the calculated statistics
         highestAccelerationTextView.setText("Najveće zabilježeno ubrzavanje: " + highestAcceleration + "m/s^2");
         highestAccelerationTextView.setTextColor(highestAcceleration >= 2.93 ? Color.RED : Color.GREEN);
 
@@ -315,7 +321,6 @@ public class StatisticsPageView extends AppCompatActivity {
         long hours = TimeUnit.SECONDS.toHours(timeSpentAboveLimitInSeconds);
         long minutes = TimeUnit.SECONDS.toMinutes(timeSpentAboveLimitInSeconds - TimeUnit.HOURS.toSeconds(hours));
         long seconds = timeSpentAboveLimitInSeconds - TimeUnit.HOURS.toSeconds(hours) - TimeUnit.MINUTES.toSeconds(minutes);
-
 
         String timeAboveLimitString = String.format("%02d h:%02d min:%02d s", hours, minutes, seconds);
         String percentageTimeAboveLimitString = String.format("%.2f", percentageTimeAboveLimit);
@@ -328,6 +333,35 @@ public class StatisticsPageView extends AppCompatActivity {
         numberOfAggressiveAccelerationTextView.setTextColor(Color.RED);
 
         typeOfDriverTextView.setText("Vi ste: " + totalScore);
+
+
+
+        // Get the selected timestamps from the dbHelper
+        long[] selectedTimestamps = dbHelper.getCurrentTimestamps();
+        startTimestamp = selectedTimestamps[0];
+        endTimestamp = selectedTimestamps[1];
+
+        // Format the timestamps into readable date and time strings
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault());
+
+        startDate = dateFormat.format(new Date(startTimestamp));
+        endDate = dateFormat.format(new Date(endTimestamp));
+
+        if(selectedTimestamps[0]!= 0){
+            // Create the message string with the timestamps
+            String selectedTimestampsMessage = "Podaci od: " + startDate + " do " + endDate;
+            // Set the message in the TextView
+            selectedTimestampsTextView.setText(selectedTimestampsMessage);
+        }else{
+            String selectedTimestampsMessage = "Svi podaci:";
+            selectedTimestampsTextView.setText(selectedTimestampsMessage);
+        }
+
+
+
+
+
+
     }
 
 
