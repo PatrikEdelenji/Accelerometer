@@ -24,8 +24,6 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
     public static final String COLUMN_Y_ACCELERATION = "y";
     public static final String COLUMN_Z_ACCELERATION = "z";
     public static final String COLUMN_TIMESTAMP = "timestamp";
-    public static long startTimestamp = 0;
-    public static long endTimestamp = 0;
 
     public AccelerationDataDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -42,7 +40,6 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
                 " timestamp INTEGER)";
         db.execSQL(CREATE_TABLE);
     }
-
 
 
     @Override
@@ -71,8 +68,7 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
     }
 
 
-
-    public double getHighestAcceleration() {
+    public double getHighestAcceleration(long startTimestamp, long endTimestamp) {
 
         SQLiteDatabase db = this.getReadableDatabase();
         String query = "SELECT MAX(acceleration) FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ?";
@@ -88,7 +84,7 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
     }
 
 
-    public double getAverageAcceleration() {
+    public double getAverageAcceleration(long startTimestamp, long endTimestamp) {
         SQLiteDatabase db = this.getReadableDatabase();
         String query = "SELECT AVG(acceleration) FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ?";
         String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp) };
@@ -103,7 +99,7 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
     }
 
 
-    public double getTimeSpentAboveLimit() {
+    public double getTimeSpentAboveLimit(long startTimestamp, long endTimestamp) {
         SQLiteDatabase db = this.getReadableDatabase();
         String query = "SELECT SUM((timestamp - prev_timestamp) / 1000.0) " +
                 "FROM (SELECT timestamp, LAG(timestamp) OVER (ORDER BY timestamp) AS prev_timestamp " +
@@ -122,14 +118,14 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
 
 
 
-    public double getPercentageAboveThreshold() {
-        double timeAboveThreshold = getTimeSpentAboveLimit();
+    public double getPercentageAboveThreshold(long startTimestamp, long endTimestamp) {
+        double timeAboveThreshold = getTimeSpentAboveLimit(startTimestamp, endTimestamp);
         double totalTime = (endTimestamp - startTimestamp) / 1000.0;
         return (timeAboveThreshold / totalTime) * 100.0;
     }
 
 
-    public int getAggressiveAccelerationCount() {
+    public int getAggressiveAccelerationCount(long startTimestamp, long endTimestamp) {
         SQLiteDatabase db = this.getReadableDatabase();
         String query = "SELECT acceleration FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ? AND acceleration";
         String[] args = { String.valueOf(startTimestamp), String.valueOf(endTimestamp) };
@@ -155,7 +151,7 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
     }
 
 
-    public int getAggressiveBrakingCount() {
+    public int getAggressiveBrakingCount(long startTimestamp, long endTimestamp) {
 
         SQLiteDatabase db = this.getReadableDatabase();
         String query = "SELECT acceleration FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ?";
@@ -180,7 +176,6 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
         db.close();
         return aggressiveBrakingCount;
     }
-
 
 
     public int getAggressiveLeftTurnCount(long startTimestamp, long endTimestamp) {
@@ -224,7 +219,7 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
         return aggressiveLeftTurnCount;
     }
 
-    public int getAggressiveRightTurnCount() {
+    public int getAggressiveRightTurnCount(long startTimestamp, long endTimestamp) {
         SQLiteDatabase db = this.getReadableDatabase();
 
         // Query to get all x, y, and z acceleration values within the time range
@@ -241,9 +236,6 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
                 double totalAcceleration = cursor.getDouble(0);
                 double xAcceleration = cursor.getDouble(1);
                 double yAcceleration = cursor.getDouble(2);
-
-
-                // Set a threshold for detecting a sharp turn
                 double threshold = 8.0;
 
                 // Check if the magnitude exceeds the threshold
@@ -265,67 +257,11 @@ public class AccelerationDataDbHelper extends SQLiteOpenHelper {
         return aggressiveRightTurnCount;
     }
 
-    public void removeDataByTimestamp() {
+    public void removeDataByTimestamp(long startTimestamp, long endTimestamp) {
         SQLiteDatabase db = this.getWritableDatabase();
         String whereClause = COLUMN_TIMESTAMP + " BETWEEN ? AND ?";
         String[] whereArgs = { String.valueOf(startTimestamp), String.valueOf(endTimestamp) };
         db.delete(TABLE_NAME, whereClause, whereArgs);
         db.close();
     }
-
-    public void getTimestamps(int selection) {
-        long[] timestamps = new long[2];
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-
-        switch (selection) {
-            case 1:
-
-                timestamps[0] = calendar.getTimeInMillis();
-                timestamps[1] = System.currentTimeMillis();
-                break;
-
-            case 2:
-                timestamps[0] = System.currentTimeMillis() - 86400000L; // 86400000 ms = 24 hours
-                timestamps[1] = System.currentTimeMillis();
-                break;
-
-            case 3:
-                timestamps[0] = System.currentTimeMillis() - 604800000L; // 604800000 ms = 7 days
-                timestamps[1] = System.currentTimeMillis();
-                break;
-
-            case 4:
-                timestamps[0] = System.currentTimeMillis() - 2592000000L; // 2592000000 ms = 30 days
-                timestamps[1] = System.currentTimeMillis();
-                break;
-            case 5:
-                timestamps[0] = 0;
-                timestamps[1] = System.currentTimeMillis();
-                break;
-
-        }
-
-        this.startTimestamp = timestamps[0];
-        this.endTimestamp = timestamps[1];
-    }
-
-    public void getTimestamps(long startTimestamp, long endTimestamp) {
-        long[] timestamps = new long[2];
-        timestamps[0] = startTimestamp;
-        timestamps[1] = endTimestamp;
-        this.startTimestamp = timestamps[0];
-        this.endTimestamp = timestamps[1];
-    }
-
-    public long[] getCurrentTimestamps() {
-        long[] timestamps = new long[2];
-        timestamps[0] = startTimestamp;
-        timestamps[1] = endTimestamp;
-        return timestamps;
-    }
-
 }
