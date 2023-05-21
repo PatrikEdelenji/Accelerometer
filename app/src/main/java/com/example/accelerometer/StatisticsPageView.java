@@ -66,7 +66,6 @@ public class StatisticsPageView extends AppCompatActivity {
         numberOfAggressiveBrakingTextView = findViewById(R.id.numberOfAggressiveBrakingTextView);
         numberOfAggressiveAccelerationTextView = findViewById(R.id.numberOfAggressiveAccelerationTextView);
         selectedTimestampsTextView = findViewById(R.id.selectedTimestampsTextView);
-
         typeOfDriverTextView = findViewById(R.id.typeOfDriver);
 
 
@@ -75,7 +74,6 @@ public class StatisticsPageView extends AppCompatActivity {
         startPickerLastSelectedDate = sharedPreferences.getLong("startPickerLastSelectedDate", -1);
         endPickerLastSelectedDate = sharedPreferences.getLong("endPickerLastSelectedDate", -1);
         lastSelection = sharedPreferences.getInt("lastSelection", -1);
-        Log.i("SELECTION", "Loaded last selection ON CREATE = " + lastSelection);
         if (lastSelectedRadioButtonId != -1 && lastSelection < 5) {
             RadioButton lastSelectedRadioButton = findViewById(lastSelectedRadioButtonId);
             dbHelper.getTimestamps(lastSelection);

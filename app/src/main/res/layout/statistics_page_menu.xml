@@ -26,7 +26,7 @@
             android:id="@+id/values24hAgo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Podaci od zadnja 24 sta" />
+            android:text="Podaci od prošlih 24 sta" />
 
         <RadioButton
             android:id="@+id/lastWeekValues"
@@ -38,7 +38,7 @@
             android:id="@+id/lastMonthValues"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Podaci od zadnjih 30 dana" />
+            android:text="Podaci od prošlih 30 dana" />
 
         <RadioButton
             android:id="@+id/allTimeValues"

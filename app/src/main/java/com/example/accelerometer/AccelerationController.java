@@ -33,30 +33,18 @@ public class AccelerationController extends AppCompatActivity implements SensorE
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Initialize MediaPlayer with the warning sound file
         mediaPlayer = MediaPlayer.create(this, R.raw.warning_sound);
         setContentView(R.layout.activity_main);
-
-        // set screen orientation to portrait
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
-        // Initialize sensor manager and accelerometer sensor
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-
-
-        // Get a reference to the TextView that will show the acceleration values
+        dbHelper = new AccelerationDataDbHelper(this);
         AccelerationView = findViewById(R.id.GaugeView);
 
-        // Create an instance of the database helper
-        dbHelper = new AccelerationDataDbHelper(this);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         final Button button = findViewById(R.id.statistics_page_button);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                // Code here executes on main thread after user presses button
-
-                // Add code to start the StatisticsPageView activity
                 Intent intent = new Intent(AccelerationController.this, StatisticsPageView.class);
                 startActivity(intent);
             }
@@ -76,7 +64,6 @@ public class AccelerationController extends AppCompatActivity implements SensorE
     protected void onResume() {
         super.onResume();
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-        // I tried playing with those - GAME, FASTEST, UI
     }
 
     @Override
@@ -89,29 +76,20 @@ public class AccelerationController extends AppCompatActivity implements SensorE
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
 
-            Log.d("Sensor Data", "X: " + event.values[0] + " Y: " + event.values[1] + " Z: " + event.values[2]);
-
-            // Calculate acceleration
             float x = event.values[0];
             float y = event.values[1];
             float z = event.values[2];
             float acceleration = (float) Math.sqrt(x * x + y * y + z * z) - 9.81f;
 
-            // Check if acceleration is outside the desired range
             if (acceleration > 2.98 || acceleration < -2.98) {
                 playWarningSound();
             }
 
             AccelerationView.setAccelerationValue(acceleration);
-
-            // Load the font from the app/res/font/ directory
-
-// Update the TextView with the new acceleration value
             TextView accelerationTextView = findViewById(R.id.accelerationTextView);
             accelerationTextView.setText(String.format("    %.1f \n   m/s²", acceleration));
             long timestamp = System.currentTimeMillis();
 
-            // Add acceleration data to the database
             dbHelper.addAccelerationData(acceleration, x, y, z, timestamp);
 
         }
