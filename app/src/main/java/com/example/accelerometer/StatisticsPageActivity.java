@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-public class StatisticsPageView extends AppCompatActivity {
+public class StatisticsPageActivity extends AppCompatActivity {
 
 
     private TextView highestAccelerationTextView;
@@ -40,8 +40,6 @@ public class StatisticsPageView extends AppCompatActivity {
     private int lastSelectedRadioButtonId = 0;
     String startDate = "";
     String endDate = "";
-
-
 
     AccelerationDataDbHelper dbHelper = new AccelerationDataDbHelper(this);
 
@@ -83,15 +81,12 @@ public class StatisticsPageView extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Retrieve the last selected radio button id from SharedPreferences and select it
         SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
         lastSelectedRadioButtonId = sharedPreferences.getInt("lastSelectedRadioButtonId", -1);
         lastStartTimestamp = sharedPreferences.getLong("lastStartTimestamp", -1);
         lastEndTimestamp = sharedPreferences.getLong("lastEndTimestamp", -1);
-        Log.i("BRUH", "onResume \n lastSelectedButton = " + lastSelectedRadioButtonId + "\n lastStartTimestamp = " + lastStartTimestamp + "\n lastEndTimestamp = " + lastEndTimestamp);
         if (lastSelectedRadioButtonId != -1) {
             RadioButton lastSelectedRadioButton = findViewById(lastSelectedRadioButtonId);
-            Log.i("STATISTIKA", "onResume: \n lastStartTimestamp = " + lastStartTimestamp + "\n lastEndTimestamp = " + lastEndTimestamp);
             updateStatisticsUI(lastStartTimestamp, lastEndTimestamp);
             if (lastSelectedRadioButton != null) {
                 lastSelectedRadioButton.setChecked(true);
@@ -108,20 +103,17 @@ public class StatisticsPageView extends AppCompatActivity {
         editor.putInt("lastSelectedRadioButtonId", lastSelectedRadioButtonId);
         editor.putLong("lastStartTimestamp", lastStartTimestamp);
         editor.putLong("lastEndTimestamp", lastEndTimestamp);
-        Log.i("STATISTIKA", "onPause: \n lastStartTimestamp = " + lastStartTimestamp + "\n lastEndTimestamp = " + lastEndTimestamp);
-        Log.i("BRUH", "onPause \n lastSelectedButton = " + lastSelectedRadioButtonId + "\n lastStartTimestamp = " + lastStartTimestamp + "\n lastEndTimestamp = " + lastEndTimestamp);
         editor.apply();
     }
 
 
     private void showFilterDialog() {
 
-        // Create a new dialog
         Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.statistics_page_menu);
         dialog.setCancelable(false);
 
-        // Set the checked state of the radio button based on the last selected ID
+
         RadioButton lastSelectedRadioButton = dialog.findViewById(lastSelectedRadioButtonId);
         if (lastSelectedRadioButton != null) {
             lastSelectedRadioButton.setChecked(true);
@@ -129,19 +121,16 @@ public class StatisticsPageView extends AppCompatActivity {
 
         RadioGroup timeRangeRadioGroup = dialog.findViewById(R.id.radioGroup);
 
-
-        // Set the default values for the date pickers if last selected dates are available
         Calendar startCalendar = Calendar.getInstance();
+        DatePicker startDatePicker = dialog.findViewById(R.id.fromDatePicker);
+        DatePicker endDatePicker = dialog.findViewById(R.id.toDatePicker);
         if (lastStartTimestamp != -1) {
-
             startCalendar.setTimeInMillis(lastStartTimestamp);
-            DatePicker startDatePicker = dialog.findViewById(R.id.fromDatePicker);
             startDatePicker.init(startCalendar.get(Calendar.YEAR), startCalendar.get(Calendar.MONTH), startCalendar.get(Calendar.DAY_OF_MONTH), null);
         }
         Calendar endCalendar = Calendar.getInstance();
         if (lastEndTimestamp != -1) {
             endCalendar.setTimeInMillis(lastEndTimestamp);
-            DatePicker endDatePicker = dialog.findViewById(R.id.toDatePicker);
             endDatePicker.init(endCalendar.get(Calendar.YEAR), endCalendar.get(Calendar.MONTH), endCalendar.get(Calendar.DAY_OF_MONTH), null);
         }
 
@@ -152,12 +141,6 @@ public class StatisticsPageView extends AppCompatActivity {
         lp.width = WindowManager.LayoutParams.MATCH_PARENT;
         lp.height = WindowManager.LayoutParams.MATCH_PARENT;
         dialog.getWindow().setAttributes(lp);
-
-
-        DatePicker startDatePicker = dialog.findViewById(R.id.fromDatePicker);
-        DatePicker endDatePicker = dialog.findViewById(R.id.toDatePicker);
-
-
 
 
 
@@ -326,7 +309,7 @@ public class StatisticsPageView extends AppCompatActivity {
 
     private void deleteData(long startTimestamp, long endTimestamp) {
         // Show the confirmation dialog
-        Dialog confirmationDialog = new Dialog(StatisticsPageView.this);
+        Dialog confirmationDialog = new Dialog(StatisticsPageActivity.this);
         confirmationDialog.setContentView(R.layout.confirmation_dialog);
         confirmationDialog.setCancelable(false);
 
@@ -355,7 +338,7 @@ public class StatisticsPageView extends AppCompatActivity {
                 confirmationDialog.dismiss();
 
                 // Show data deleted notification
-                Toast.makeText(StatisticsPageView.this, "Podaci obrisani!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(StatisticsPageActivity.this, "Podaci obrisani!", Toast.LENGTH_SHORT).show();
             }
         });
 
