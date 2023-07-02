@@ -9,9 +9,6 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
 import android.view.View;
-import android.widget.TextView;
-
-
 import androidx.core.graphics.ColorUtils;
 
 import java.util.Locale;
@@ -22,35 +19,26 @@ public class AccelerationView extends View {
     private Paint gaugePaint;
     private Paint needlePaint;
     private Paint backgroundPaint;
-    private float centerX;
-    private float centerY;
-    private float radius;
+    private float radius = 300;
     private float maxValue = 5f;
     private float minValue = -5f;
     private float startAngle = -90f;
     private float endAngle = 90f;
     private float numDivisions = 10;
 
-
-
     public AccelerationView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
-
     }
 
     private void init() {
 
-        // Initialize the paints
         gaugePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         gaugePaint.setStyle(Paint.Style.STROKE);
         gaugePaint.setStrokeWidth(40f);
-        //gaugePaint.setColor(Color.RED);
 
         needlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         needlePaint.setStyle(Paint.Style.FILL);
-        //needlePaint.setStrokeWidth(2.0f);
-
 
         backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         backgroundPaint.setStyle(Paint.Style.STROKE);
@@ -58,7 +46,7 @@ public class AccelerationView extends View {
         backgroundPaint.setColor(Color.GRAY);
     }
 
-    //Smoothens out the needle animation
+
     public void setAccelerationValue(float acceleration) {
         ValueAnimator animator = ValueAnimator.ofFloat(accelerationValue, acceleration);
         animator.setDuration(200);
@@ -73,62 +61,36 @@ public class AccelerationView extends View {
     }
 
     @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        super.onSizeChanged(w, h, oldw, oldh);
-
-        // Calculate the dimensions of the gauge
-        centerX = getWidth() / 3f;
-        centerY = getHeight() / 2f;
-        radius = Math.min(centerX, centerY) - 10f;
-    }
-
-    @Override
     protected void onDraw(Canvas canvas) {
 
-
-        // Changes the position of the gauge
         float centerX = canvas.getWidth() / 2f;
         float centerY = canvas.getHeight() / 4f;
 
-        // Draw the scale
         Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setTextSize(30f);
         textPaint.setColor(Color.BLACK);
         float textHeight = textPaint.descent() - textPaint.ascent();
         float scaleStep = (maxValue - minValue) / numDivisions;
         float scaleValue = minValue;
-        float scaleAngle = (endAngle - startAngle) / numDivisions;
         for (int i = 0; i <= numDivisions; i++) {
-            // Calculate the angle for this label
             float labelAngle = (i / numDivisions) * (endAngle - startAngle) + startAngle;
-
-            // Convert the angle to radians
             float labelAngleRad = (float) Math.toRadians(labelAngle);
-
-            // Calculate the position of the label
-            // CHanging + and - decides whether the numbers will be inside or outside of the gauge
             float x = centerX + (radius + 60f) * (float) Math.sin(labelAngleRad);
             float y = centerY - (radius + 60f) * (float) Math.cos(labelAngleRad);
 
-            // Calculate the width of the text
             String label = String.format(Locale.getDefault(), "%.1f", scaleValue);
             float labelWidth = textPaint.measureText(label);
 
-            // Draw the label from left to right
             canvas.drawText(label, x - labelWidth / 2f, y + textHeight / 2f - textPaint.descent(), textPaint);
-
             scaleValue += scaleStep;
         }
 
-        // Calculate the angle of the needle based on the acceleration value
-        float angle = Math.max(startAngle, Math.min(endAngle, (endAngle - startAngle) * (accelerationValue - minValue) / (maxValue - minValue) + startAngle));
 
-         float lowerLimit = startAngle;
+        float angle = Math.max(startAngle, Math.min(endAngle, (endAngle - startAngle) * (accelerationValue - minValue) / (maxValue - minValue) + startAngle));
+        float lowerLimit = startAngle;
         float upperLimit = endAngle;
         angle = Math.max(lowerLimit, Math.min(upperLimit, angle));
 
-        // Draw the gauge needle
-        needlePaint.setStyle(Paint.Style.FILL);
         Path needlePath = new Path();
         needlePath.moveTo(centerX, centerY - radius);
         needlePath.lineTo(centerX - 20, centerY);
@@ -140,22 +102,21 @@ public class AccelerationView extends View {
         canvas.drawPath(needlePath, needlePaint);
         canvas.restore();
 
-        // Update the gauge color based on the acceleration value
+
         int gaugeColor, needleColor;
         if (accelerationValue < 2.0 && accelerationValue > -2.0) {
-            needleColor = ColorUtils.blendARGB(Color.GREEN, Color.BLACK, 0.1f); // Set needle color to a darker shade of green for acceleration < 2.0
-            gaugeColor = ColorUtils.blendARGB(Color.GREEN, Color.BLACK, 0.1f); // Set gauge color to a darker shade of green for acceleration < 2.0
+            needleColor = ColorUtils.blendARGB(Color.GREEN, Color.BLACK, 0.1f);
+            gaugeColor = ColorUtils.blendARGB(Color.GREEN, Color.BLACK, 0.1f);
         } else if (accelerationValue < 2.943 && accelerationValue > -2.943) {
-            needleColor = ColorUtils.blendARGB(Color.YELLOW, Color.BLACK, 0.1f); // Set needle color to a darker shade of yellow for acceleration between 2.0 and 6.0
-            gaugeColor = Color.YELLOW; // Set gauge color to yellow for acceleration between 2.0 and 6.0
+            needleColor = ColorUtils.blendARGB(Color.YELLOW, Color.BLACK, 0.1f);
+            gaugeColor = Color.YELLOW;
         } else {
-            needleColor = Color.RED; // Set needle color to red for acceleration >= 6.0
-            gaugeColor = Color.RED; // Set gauge color to red for acceleration >= 6.0
+            needleColor = Color.RED;
+            gaugeColor = Color.RED;
         }
         gaugePaint.setColor(gaugeColor);
         needlePaint.setColor(needleColor);
 
-        // Draw the gauge outline
         canvas.drawArc(centerX - radius, centerY - radius, centerX + radius, centerY + radius, 180f, 180f, false, gaugePaint);
 
     }

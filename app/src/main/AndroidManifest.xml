@@ -24,7 +24,7 @@
         </activity>
 
         <activity
-            android:name=".StatisticsPageView" />
+            android:name=".StatisticsPageActivity" />
 
         <meta-data
             android:name="preloaded_fonts"

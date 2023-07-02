@@ -7,7 +7,6 @@ import android.app.Dialog;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -16,7 +15,6 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -97,13 +95,13 @@ public class StatisticsPageActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        // Save the last selected radio button id to SharedPreferences
         SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt("lastSelectedRadioButtonId", lastSelectedRadioButtonId);
         editor.putLong("lastStartTimestamp", lastStartTimestamp);
         editor.putLong("lastEndTimestamp", lastEndTimestamp);
         editor.apply();
+        updateStatisticsUI(lastStartTimestamp, lastEndTimestamp);
     }
 
 
@@ -148,7 +146,7 @@ public class StatisticsPageActivity extends AppCompatActivity {
         RadioGroup.OnCheckedChangeListener radioGroupListener = new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
-                selectedRadioButtonId.set(checkedId); // Update the selectedRadioButtonId value
+                selectedRadioButtonId.set(checkedId);
                 calculateTimestamps(startCalendar, endCalendar, startDatePicker, endDatePicker, selectedRadioButtonId.get());
             }
         };
@@ -176,12 +174,10 @@ public class StatisticsPageActivity extends AppCompatActivity {
         deleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Call the delete function
                 deleteData(lastStartTimestamp, lastEndTimestamp);
             }
         });
 
-        // Set up the confirm button
         Button confirmButton = dialog.findViewById(R.id.confirmButton);
         confirmButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -190,11 +186,6 @@ public class StatisticsPageActivity extends AppCompatActivity {
                 dialog.dismiss();
             }
         });
-
-
-
-
-
     }
 
     private void updateStatisticsUI(long lastStartTimestamp, long lastEndTimestamp) {
@@ -208,12 +199,12 @@ public class StatisticsPageActivity extends AppCompatActivity {
 
         String totalScore = PointCalculatorController.calculateScore(highestAcceleration,
                                                                         averageAcceleration,
-                                                                        timeSpentAboveLimit,
                                                                         percentageTimeAboveLimit,
                                                                         aggressiveAccelerationCount,
                                                                         aggressiveBrakingCount,
                                                                         lastStartTimestamp,
                                                                         lastEndTimestamp);
+
         highestAccelerationTextView.setText("Najveće zabilježeno ubrzavanje: " + highestAcceleration + "m/s^2");
         highestAccelerationTextView.setTextColor(highestAcceleration >= 2.93 ? Color.RED : Color.GREEN);
 
@@ -225,28 +216,23 @@ public class StatisticsPageActivity extends AppCompatActivity {
         long minutes = TimeUnit.SECONDS.toMinutes(timeSpentAboveLimitInSeconds - TimeUnit.HOURS.toSeconds(hours));
         long seconds = timeSpentAboveLimitInSeconds - TimeUnit.HOURS.toSeconds(hours) - TimeUnit.MINUTES.toSeconds(minutes);
 
-        String timeAboveLimitString = String.format("%02d h:%02d min:%02d s", hours, minutes, seconds);
+        String timeAboveLimitString = String.format("%02dh: %02dmin: %02ds", hours, minutes, seconds);
         String percentageTimeAboveLimitString = String.format("%.2f", percentageTimeAboveLimit);
         timeAboveLimitTextView.setText("Vrijeme provedeno iznad limita: " + timeAboveLimitString + "(" + percentageTimeAboveLimitString + "% ukupnog vremena)");
 
         numberOfAggressiveBrakingTextView.setText("Broj naglih kočenja: " + aggressiveBrakingCount);
-        numberOfAggressiveBrakingTextView.setTextColor(Color.RED);
+        numberOfAggressiveBrakingTextView.setTextColor(aggressiveBrakingCount >= 1 ? Color.RED : Color.GREEN);
 
         numberOfAggressiveAccelerationTextView.setText("Broj agresivnih ubrzavajna: " + aggressiveAccelerationCount);
-        numberOfAggressiveAccelerationTextView.setTextColor(Color.RED);
+        numberOfAggressiveAccelerationTextView.setTextColor(aggressiveAccelerationCount >= 1 ? Color.RED : Color.GREEN);
         typeOfDriverTextView.setText("Vi ste: " + totalScore);
 
-        // Format the timestamps into readable date and time strings
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault());
-
         startDate = dateFormat.format(new Date(lastStartTimestamp));
-        Log.i("STATISTIKA", "lastStartTimestamp: " + lastStartTimestamp);
         endDate = dateFormat.format(new Date(lastEndTimestamp));
-        Log.i("STATISTIKA", "lastEndTimestamp: " + lastEndTimestamp);
 
         if(lastStartTimestamp != 0 && lastEndTimestamp != 0){
             String selectedTimestampsMessage = "Podaci od: " + startDate + " do " + endDate;
-            // Set the message in the TextView
             selectedTimestampsTextView.setText(selectedTimestampsMessage);
         }else{
             String selectedTimestampsMessage = "Svi podaci:";
@@ -257,7 +243,6 @@ public class StatisticsPageActivity extends AppCompatActivity {
 
     public void calculateTimestamps(Calendar startCalendar, Calendar endCalendar, DatePicker startDatePicker, DatePicker endDatePicker , int selectedRadioButtonId){
 
-        Log.i("BRUH", "Actually executed");
         if (selectedRadioButtonId == R.id.todaysValues) {
             Calendar calendarToday = Calendar.getInstance();
             calendarToday.set(Calendar.HOUR_OF_DAY, 0);
@@ -268,15 +253,15 @@ public class StatisticsPageActivity extends AppCompatActivity {
             lastEndTimestamp = System.currentTimeMillis();
         } else if (selectedRadioButtonId == R.id.values24hAgo) {
             lastSelectedRadioButtonId = selectedRadioButtonId;
-            lastStartTimestamp = System.currentTimeMillis() - 86400000L; // 86400000 ms = 24 hours
+            lastStartTimestamp = System.currentTimeMillis() - 86400000L; // 86400000 ms = 24 sata
             lastEndTimestamp = System.currentTimeMillis();
         } else if (selectedRadioButtonId == R.id.lastWeekValues) {
             lastSelectedRadioButtonId = selectedRadioButtonId;
-            lastStartTimestamp = System.currentTimeMillis() - 604800000L; // 604800000 ms = 7 days
+            lastStartTimestamp = System.currentTimeMillis() - 604800000L; // 604800000 ms = 7 dana
             lastEndTimestamp = System.currentTimeMillis();
         } else if (selectedRadioButtonId == R.id.lastMonthValues) {
             lastSelectedRadioButtonId = selectedRadioButtonId;
-            lastStartTimestamp = System.currentTimeMillis() - 2592000000L; // 2592000000 ms = 30 days
+            lastStartTimestamp = System.currentTimeMillis() - 2592000000L; // 2592000000 ms = 30 dana
             lastEndTimestamp = System.currentTimeMillis();
         } else if (selectedRadioButtonId == R.id.allTimeValues) {
             lastSelectedRadioButtonId = selectedRadioButtonId;
@@ -294,7 +279,6 @@ public class StatisticsPageActivity extends AppCompatActivity {
             lastEndTimestamp = endCalendar.getTimeInMillis();
 
         }
-        Log.i("BRUH", "CalculateTimestamps \n lastSelectedButton = " + lastSelectedRadioButtonId + "\n lastStartTimestamp = " + lastStartTimestamp + "\n lastEndTimestamp = " + lastEndTimestamp);
         SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt("lastSelectedRadioButtonId", lastSelectedRadioButtonId);
@@ -308,7 +292,7 @@ public class StatisticsPageActivity extends AppCompatActivity {
 
 
     private void deleteData(long startTimestamp, long endTimestamp) {
-        // Show the confirmation dialog
+
         Dialog confirmationDialog = new Dialog(StatisticsPageActivity.this);
         confirmationDialog.setContentView(R.layout.confirmation_dialog);
         confirmationDialog.setCancelable(false);
@@ -324,7 +308,6 @@ public class StatisticsPageActivity extends AppCompatActivity {
             message = "Jeste li sigurni da želite obrisati SVE podatke?";
         }
 
-
         TextView timestampsTextView = confirmationDialog.findViewById(R.id.timestampsTextView);
         timestampsTextView.setText(message);
 
@@ -334,10 +317,9 @@ public class StatisticsPageActivity extends AppCompatActivity {
         yesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dbHelper.removeDataByTimestamp(lastStartTimestamp, lastEndTimestamp);  // Call the data deletion method
+                dbHelper.removeDataByTimestamp(lastStartTimestamp, lastEndTimestamp);
+                updateStatisticsUI(lastStartTimestamp, lastEndTimestamp);
                 confirmationDialog.dismiss();
-
-                // Show data deleted notification
                 Toast.makeText(StatisticsPageActivity.this, "Podaci obrisani!", Toast.LENGTH_SHORT).show();
             }
         });
@@ -351,10 +333,5 @@ public class StatisticsPageActivity extends AppCompatActivity {
 
         confirmationDialog.show();
     }
-
-
-
-
-
 }
 

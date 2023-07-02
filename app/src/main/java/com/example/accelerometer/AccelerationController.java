@@ -45,7 +45,7 @@ public class AccelerationController extends AppCompatActivity implements SensorE
         final Button button = findViewById(R.id.statistics_page_button);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent intent = new Intent(AccelerationController.this, StatisticsPageView.class);
+                Intent intent = new Intent(AccelerationController.this, StatisticsPageActivity.class);
                 startActivity(intent);
             }
         });
