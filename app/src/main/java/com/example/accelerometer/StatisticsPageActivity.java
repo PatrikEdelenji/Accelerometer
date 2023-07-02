@@ -46,11 +46,25 @@ public class StatisticsPageActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.statistics_page);
 
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.statistics_page_menu);
+        dialog.setCancelable(false);
+
+        Calendar startCalendar = Calendar.getInstance();
+        DatePicker startDatePicker = dialog.findViewById(R.id.fromDatePicker);
+
+        Calendar endCalendar = Calendar.getInstance();
+        DatePicker endDatePicker = dialog.findViewById(R.id.toDatePicker);
+
+
+
+
         Button sortButton = findViewById(R.id.sortButton);
+
         sortButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showFilterDialog();
+                showFilterDialog(startCalendar, endCalendar, startDatePicker, endDatePicker, dialog);
             }
         });
 
@@ -74,6 +88,9 @@ public class StatisticsPageActivity extends AppCompatActivity {
                 lastSelectedRadioButton.setChecked(true);
             }
         }
+
+
+
     }
 
     @Override
@@ -90,6 +107,21 @@ public class StatisticsPageActivity extends AppCompatActivity {
                 lastSelectedRadioButton.setChecked(true);
             }
         }
+
+
+
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.statistics_page_menu);
+        dialog.setCancelable(false);
+
+        Calendar startCalendar = Calendar.getInstance();
+        DatePicker startDatePicker = dialog.findViewById(R.id.fromDatePicker);
+
+        Calendar endCalendar = Calendar.getInstance();
+        DatePicker endDatePicker = dialog.findViewById(R.id.toDatePicker);
+
+        calculateTimestamps(startCalendar, endCalendar, startDatePicker, endDatePicker, lastSelectedRadioButtonId);
+        updateStatisticsUI(lastStartTimestamp, lastEndTimestamp);
     }
 
     @Override
@@ -105,11 +137,9 @@ public class StatisticsPageActivity extends AppCompatActivity {
     }
 
 
-    private void showFilterDialog() {
+    private void showFilterDialog(Calendar startCalendar, Calendar endCalendar, DatePicker startDatePicker, DatePicker endDatePicker, Dialog dialog) {
 
-        Dialog dialog = new Dialog(this);
-        dialog.setContentView(R.layout.statistics_page_menu);
-        dialog.setCancelable(false);
+
 
 
         RadioButton lastSelectedRadioButton = dialog.findViewById(lastSelectedRadioButtonId);
@@ -117,20 +147,17 @@ public class StatisticsPageActivity extends AppCompatActivity {
             lastSelectedRadioButton.setChecked(true);
         }
 
-        RadioGroup timeRangeRadioGroup = dialog.findViewById(R.id.radioGroup);
-
-        Calendar startCalendar = Calendar.getInstance();
-        DatePicker startDatePicker = dialog.findViewById(R.id.fromDatePicker);
-        DatePicker endDatePicker = dialog.findViewById(R.id.toDatePicker);
         if (lastStartTimestamp != -1) {
             startCalendar.setTimeInMillis(lastStartTimestamp);
             startDatePicker.init(startCalendar.get(Calendar.YEAR), startCalendar.get(Calendar.MONTH), startCalendar.get(Calendar.DAY_OF_MONTH), null);
         }
-        Calendar endCalendar = Calendar.getInstance();
+
         if (lastEndTimestamp != -1) {
             endCalendar.setTimeInMillis(lastEndTimestamp);
             endDatePicker.init(endCalendar.get(Calendar.YEAR), endCalendar.get(Calendar.MONTH), endCalendar.get(Calendar.DAY_OF_MONTH), null);
         }
+
+
 
         dialog.show();
 
@@ -139,6 +166,7 @@ public class StatisticsPageActivity extends AppCompatActivity {
         lp.width = WindowManager.LayoutParams.MATCH_PARENT;
         lp.height = WindowManager.LayoutParams.MATCH_PARENT;
         dialog.getWindow().setAttributes(lp);
+
 
 
 
@@ -165,9 +193,16 @@ public class StatisticsPageActivity extends AppCompatActivity {
             }
         };
 
+
+        RadioGroup timeRangeRadioGroup = dialog.findViewById(R.id.radioGroup);
         timeRangeRadioGroup.setOnCheckedChangeListener(radioGroupListener);
         startDatePicker.init(startCalendar.get(Calendar.YEAR), startCalendar.get(Calendar.MONTH), startCalendar.get(Calendar.DAY_OF_MONTH), startDateListener);
         endDatePicker.init(endCalendar.get(Calendar.YEAR), endCalendar.get(Calendar.MONTH), endCalendar.get(Calendar.DAY_OF_MONTH), endDateListener);
+
+
+
+
+
 
 
         Button deleteButton = dialog.findViewById(R.id.deleteButton);
@@ -189,6 +224,7 @@ public class StatisticsPageActivity extends AppCompatActivity {
     }
 
     private void updateStatisticsUI(long lastStartTimestamp, long lastEndTimestamp) {
+
 
         double highestAcceleration = dbHelper.getHighestAcceleration(lastStartTimestamp, lastEndTimestamp);
         double averageAcceleration = dbHelper.getAverageAcceleration(lastStartTimestamp, lastEndTimestamp);
@@ -241,7 +277,7 @@ public class StatisticsPageActivity extends AppCompatActivity {
     }
 
 
-    public void calculateTimestamps(Calendar startCalendar, Calendar endCalendar, DatePicker startDatePicker, DatePicker endDatePicker , int selectedRadioButtonId){
+    public void calculateTimestamps(Calendar startCalendar, Calendar endCalendar, DatePicker startDatePicker, DatePicker endDatePicker, int selectedRadioButtonId){
 
         if (selectedRadioButtonId == R.id.todaysValues) {
             Calendar calendarToday = Calendar.getInstance();
