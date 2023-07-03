@@ -7,6 +7,7 @@ import android.app.Dialog;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -122,6 +123,7 @@ public class StatisticsPageActivity extends AppCompatActivity {
 
         calculateTimestamps(startCalendar, endCalendar, startDatePicker, endDatePicker, lastSelectedRadioButtonId);
         updateStatisticsUI(lastStartTimestamp, lastEndTimestamp);
+
     }
 
     @Override
@@ -193,11 +195,12 @@ public class StatisticsPageActivity extends AppCompatActivity {
             }
         };
 
-
         RadioGroup timeRangeRadioGroup = dialog.findViewById(R.id.radioGroup);
         timeRangeRadioGroup.setOnCheckedChangeListener(radioGroupListener);
         startDatePicker.init(startCalendar.get(Calendar.YEAR), startCalendar.get(Calendar.MONTH), startCalendar.get(Calendar.DAY_OF_MONTH), startDateListener);
         endDatePicker.init(endCalendar.get(Calendar.YEAR), endCalendar.get(Calendar.MONTH), endCalendar.get(Calendar.DAY_OF_MONTH), endDateListener);
+
+
 
 
 
@@ -217,7 +220,6 @@ public class StatisticsPageActivity extends AppCompatActivity {
         confirmButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 dialog.dismiss();
             }
         });
@@ -309,10 +311,11 @@ public class StatisticsPageActivity extends AppCompatActivity {
             startCalendar.set(startDatePicker.getYear(), startDatePicker.getMonth(), startDatePicker.getDayOfMonth(), 0, 0, 0);
             startCalendar.set(Calendar.MILLISECOND, 0);
             lastStartTimestamp = startCalendar.getTimeInMillis();
-
             endCalendar.set(endDatePicker.getYear(), endDatePicker.getMonth(), endDatePicker.getDayOfMonth(), 23, 59, 59);
             endCalendar.set(Calendar.MILLISECOND, 999);
             lastEndTimestamp = endCalendar.getTimeInMillis();
+            Log.i("LOL", "Read timestamps with " + lastStartTimestamp + " and " + lastEndTimestamp);
+
 
         }
         SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
@@ -321,7 +324,7 @@ public class StatisticsPageActivity extends AppCompatActivity {
         editor.putLong("lastStartTimestamp", lastStartTimestamp);
         editor.putLong("lastEndTimestamp", lastEndTimestamp);
         editor.apply();
-
+        Log.i("LOL", "Updated timestamps with " + lastStartTimestamp + " and " + lastEndTimestamp);
         updateStatisticsUI(lastStartTimestamp, lastEndTimestamp);
 
     }
