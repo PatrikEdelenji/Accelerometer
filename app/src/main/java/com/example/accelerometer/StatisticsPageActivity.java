@@ -141,6 +141,8 @@ public class StatisticsPageActivity extends AppCompatActivity {
 
     private void showFilterDialog(Calendar startCalendar, Calendar endCalendar, DatePicker startDatePicker, DatePicker endDatePicker, Dialog dialog) {
 
+        SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+        lastSelectedRadioButtonId = sharedPreferences.getInt("lastSelectedRadioButtonId", -1);
 
 
 
@@ -172,28 +174,31 @@ public class StatisticsPageActivity extends AppCompatActivity {
 
 
 
-        final AtomicInteger selectedRadioButtonId = new AtomicInteger();
+
+
         RadioGroup.OnCheckedChangeListener radioGroupListener = new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
-                selectedRadioButtonId.set(checkedId);
-                calculateTimestamps(startCalendar, endCalendar, startDatePicker, endDatePicker, selectedRadioButtonId.get());
+                lastSelectedRadioButtonId = checkedId;
+                calculateTimestamps(startCalendar, endCalendar, startDatePicker, endDatePicker, lastSelectedRadioButtonId);
             }
         };
 
         DatePicker.OnDateChangedListener startDateListener = new DatePicker.OnDateChangedListener() {
             @Override
             public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-                calculateTimestamps(startCalendar, endCalendar, startDatePicker, endDatePicker, selectedRadioButtonId.get());
+
+                calculateTimestamps(startCalendar, endCalendar, startDatePicker, endDatePicker, lastSelectedRadioButtonId);
             }
         };
 
         DatePicker.OnDateChangedListener endDateListener = new DatePicker.OnDateChangedListener() {
             @Override
             public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-                calculateTimestamps(startCalendar, endCalendar, startDatePicker, endDatePicker, selectedRadioButtonId.get());
+                calculateTimestamps(startCalendar, endCalendar, startDatePicker, endDatePicker, lastSelectedRadioButtonId);
             }
         };
+
 
         RadioGroup timeRangeRadioGroup = dialog.findViewById(R.id.radioGroup);
         timeRangeRadioGroup.setOnCheckedChangeListener(radioGroupListener);
@@ -281,6 +286,7 @@ public class StatisticsPageActivity extends AppCompatActivity {
 
     public void calculateTimestamps(Calendar startCalendar, Calendar endCalendar, DatePicker startDatePicker, DatePicker endDatePicker, int selectedRadioButtonId){
 
+
         if (selectedRadioButtonId == R.id.todaysValues) {
             Calendar calendarToday = Calendar.getInstance();
             calendarToday.set(Calendar.HOUR_OF_DAY, 0);
@@ -314,17 +320,14 @@ public class StatisticsPageActivity extends AppCompatActivity {
             endCalendar.set(endDatePicker.getYear(), endDatePicker.getMonth(), endDatePicker.getDayOfMonth(), 23, 59, 59);
             endCalendar.set(Calendar.MILLISECOND, 999);
             lastEndTimestamp = endCalendar.getTimeInMillis();
-            Log.i("LOL", "Read timestamps with " + lastStartTimestamp + " and " + lastEndTimestamp);
-
-
         }
+
         SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt("lastSelectedRadioButtonId", lastSelectedRadioButtonId);
         editor.putLong("lastStartTimestamp", lastStartTimestamp);
         editor.putLong("lastEndTimestamp", lastEndTimestamp);
         editor.apply();
-        Log.i("LOL", "Updated timestamps with " + lastStartTimestamp + " and " + lastEndTimestamp);
         updateStatisticsUI(lastStartTimestamp, lastEndTimestamp);
 
     }
