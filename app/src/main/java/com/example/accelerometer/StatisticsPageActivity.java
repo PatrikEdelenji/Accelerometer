@@ -57,11 +57,7 @@ public class StatisticsPageActivity extends AppCompatActivity {
         Calendar endCalendar = Calendar.getInstance();
         DatePicker endDatePicker = dialog.findViewById(R.id.toDatePicker);
 
-
-
-
         Button sortButton = findViewById(R.id.sortButton);
-
         sortButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -89,9 +85,6 @@ public class StatisticsPageActivity extends AppCompatActivity {
                 lastSelectedRadioButton.setChecked(true);
             }
         }
-
-
-
     }
 
     @Override
